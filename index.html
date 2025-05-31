@@ -17,6 +17,7 @@
   <div id="hud">
     ❤️ Vida: <span id="vida">100%</span> |
     🔮 Mana: <span id="mana">50</span> |
+    🛡️ Defesa: <span id="defesa">5</span> |
     ⭐ Nível: <span id="nivel">1</span> |
     📘 XP: <span id="xp">0</span> |
     💰 Moedas: <span id="moedas">20</span>
@@ -51,6 +52,8 @@
     Pontos disponíveis: <span id="pontos">0</span><br>
     <button onclick="aumentar('dano')">🔼 Dano (<span id="dano">15</span>)</button>
     <button onclick="aumentar('vidaMax')">🔼 Vida Máx (<span id="vidaMax">100</span>)</button>
+    <button onclick="aumentar('manaMax')">🔼 Mana Máx (<span id="manaMax">50</span>)</button>
+    <button onclick="aumentar('defesa')">🔼 Defesa (<span id="defesaVal">5</span>)</button>
     <button onclick="fecharStatus()">❌ Fechar</button>
   </div>
 
@@ -61,8 +64,8 @@
     const ctx = canvas.getContext("2d");
 
     const jogador = {
-      vida: 100, mana: 50, nivel: 1, xp: 0, moedas: 20,
-      dano: 15, vidaMax: 100, pocoes: 3, espada: false, armadura: false,
+      vida: 100, mana: 50, manaMax: 50, nivel: 1, xp: 0, moedas: 20,
+      dano: 15, vidaMax: 100, defesa: 5, pocoes: 3, espada: false, armadura: false,
       buffEspada: 0, buffArmadura: 0, cooldownEspada: 0, cooldownArmadura: 0,
       pontos: 0
     };
@@ -71,9 +74,18 @@
     let animarAtaque = 0;
 
     function gerarInimigo() {
-      const vidaBase = 50 + jogador.nivel * 10;
-      const ataque = 10 + jogador.nivel * 2;
-      return { vida: vidaBase, ataque };
+      if (jogador.nivel % 10 === 0) {
+        const bosses = ["Orc", "Dragão", "Minotauro"];
+        const nome = bosses[Math.floor(Math.random() * bosses.length)];
+        const vidaBase = 200 + jogador.nivel * 15;
+        const ataque = 30 + jogador.nivel * 3;
+        log(`⚠️ BOSS: ${nome} apareceu!`);
+        return { vida: vidaBase, ataque };
+      } else {
+        const vidaBase = 50 + jogador.nivel * 10;
+        const ataque = 10 + jogador.nivel * 2;
+        return { vida: vidaBase, ataque };
+      }
     }
 
     function desenhar() {
@@ -103,6 +115,9 @@
       document.getElementById("pontos").textContent = jogador.pontos;
       document.getElementById("dano").textContent = jogador.dano;
       document.getElementById("vidaMax").textContent = jogador.vidaMax;
+      document.getElementById("manaMax").textContent = jogador.manaMax;
+      document.getElementById("defesa").textContent = jogador.defesa;
+      document.getElementById("defesaVal").textContent = jogador.defesa;
     }
 
     function acao(tipo) {
@@ -114,19 +129,14 @@
         animarAtaque = 5;
         decrementarBuffs();
         decrementarCooldowns();
-        if (inimigo.vida <= 0) {
-          vitoria();
-        } else {
-          turnoInimigo();
-        }
+        if (inimigo.vida <= 0) vitoria();
+        else turnoInimigo();
       } else if (tipo === "usarPocao") {
         if (jogador.pocoes > 0) {
           jogador.vida = Math.min(jogador.vida + 30, jogador.vidaMax);
           jogador.pocoes--;
           log("Você usou uma poção!");
-        } else {
-          log("Sem poções!");
-        }
+        } else log("Sem poções!");
         decrementarCooldowns();
       }
       atualizarHUD();
@@ -134,9 +144,9 @@
     }
 
     function turnoInimigo() {
-      let dano = inimigo.ataque;
+      let dano = inimigo.ataque - jogador.defesa;
       if (jogador.armadura || jogador.buffArmadura > 0) dano -= 5;
-      jogador.vida -= dano;
+      jogador.vida -= Math.max(dano, 0);
       log(`O inimigo causou ${dano} de dano!`);
       if (jogador.vida <= 0) {
         alert("Você foi derrotado!");
@@ -147,15 +157,15 @@
     function vitoria() {
       log("🎉 Inimigo derrotado!");
       jogador.xp += 10;
-      const ganho = Math.floor(Math.random() * 16) + 5; // 5 a 20
+      const ganho = Math.floor(Math.random() * 16) + 5;
       jogador.moedas += ganho;
       log(`Você ganhou ${ganho} moedas!`);
       if (jogador.xp >= 20) {
         jogador.nivel++;
         jogador.xp = 0;
         jogador.vida = jogador.vidaMax;
-        jogador.mana = 50;
-        jogador.pontos += 2;
+        jogador.mana = jogador.manaMax;
+        jogador.pontos += 3;
         log("🔺 Subiu para o nível " + jogador.nivel + "!");
       }
       inimigo = gerarInimigo();
@@ -216,7 +226,10 @@
 
     function aumentar(attr) {
       if (jogador.pontos > 0) {
-        jogador[attr] += (attr === 'vidaMax' ? 10 : 2);
+        if (attr === 'vidaMax') jogador[attr] += 10;
+        else if (attr === 'manaMax') jogador[attr] += 10;
+        else if (attr === 'defesa') jogador[attr] += 1;
+        else jogador[attr] += 2;
         jogador.pontos--;
         atualizarHUD();
       }
