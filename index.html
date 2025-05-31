@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <title>RPG com Buff Temporário e Cooldown</title>
+  <style>
+    body { background: #111; color: white; font-family: sans-serif; text-align: center; }
+    canvas { background: #222; border: 2px solid #fff; display: block; margin: 10px auto; }
+    button { padding: 6px 12px; margin: 5px; font-weight: bold; }
+    #hud, #acoes, #inventario, #loja, #log { margin-top: 10px; }
+  </style>
+</head>
+<body>
+  <h1>🔥 RPG Game 2d 🔥</h1>
+  <canvas id="game" width="640" height="360"></canvas>
+
+  <div id="hud">
+    ❤️ Vida: <span id="vida">100%</span> |
+    🔮 Mana: <span id="mana">50</span> |
+    ⭐ Nível: <span id="nivel">1</span> |
+    📘 XP: <span id="xp">0</span> |
+    💰 Moedas: <span id="moedas">20</span>
+  </div>
+
+  <div id="inventario">
+    🎒 Inventário:
+    <span id="pocoes">3 poções</span> |
+    <span id="espada">Espada: ❌</span> |
+    <span id="armadura">Armadura: ❌</span>
+  </div>
+
+  <div id="acoes">
+    <button onclick="acao('atacar')">⚔️ Atacar</button>
+    <button onclick="acao('usarPocao')">🧪 Usar Poção</button>
+    <button onclick="ativarBuff('espada')">🗡️ Buff Espada (3 turnos)</button>
+    <button onclick="ativarBuff('armadura')">🛡️ Buff Armadura (3 turnos)</button>
+    <button onclick="abrirLoja()">🛒 Loja</button>
+  </div>
+
+  <div id="loja" style="display: none;">
+    <h3>🛍️ Loja</h3>
+    <button onclick="comprar('pocao')">🧪 Poção (5 💰)</button>
+    <button onclick="comprar('espada')">🗡️ Espada (15 💰)</button>
+    <button onclick="comprar('armadura')">🛡️ Armadura (15 💰)</button>
+    <button onclick="fecharLoja()">❌ Fechar</button>
+  </div>
+
+  <div id="log"></div>
+
+  <script>
+    const canvas = document.getElementById("game");
+    const ctx = canvas.getContext("2d");
+
+    const jogador = {
+      vida: 100, mana: 50, nivel: 1, xp: 0, moedas: 20,
+      dano: 15, pocoes: 3, espada: false, armadura: false,
+      buffEspada: 0, buffArmadura: 0,
+      cooldownEspada: 0, cooldownArmadura: 0
+    };
+
+    let inimigo = gerarInimigo();
+
+    function gerarInimigo() {
+      const vidaBase = 50 + jogador.nivel * 10;
+      const ataque = 10 + jogador.nivel * 2;
+      return { vida: vidaBase, ataque };
+    }
+
+    function desenhar() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = "blue";
+      ctx.fillRect(100, 150, 50, 50); // jogador
+      ctx.fillStyle = "red";
+      ctx.fillRect(480, 150, 50, 50); // inimigo
+      ctx.fillStyle = "white";
+      ctx.font = "16px sans-serif";
+      ctx.fillText("Inimigo HP: " + inimigo.vida, 460, 140);
+    }
+
+    function atualizarHUD() {
+      document.getElementById("vida").textContent = jogador.vida + "%";
+      document.getElementById("mana").textContent = jogador.mana;
+      document.getElementById("nivel").textContent = jogador.nivel;
+      document.getElementById("xp").textContent = jogador.xp;
+      document.getElementById("moedas").textContent = jogador.moedas;
+      document.getElementById("pocoes").textContent = jogador.pocoes + " poções";
+      document.getElementById("espada").textContent = "Espada: " + (jogador.espada ? "✅" : "❌");
+      document.getElementById("armadura").textContent = "Armadura: " + (jogador.armadura ? "✅" : "❌");
+    }
+
+    function acao(tipo) {
+      if (tipo === "atacar") {
+        let dano = jogador.dano;
+        if (jogador.espada || jogador.buffEspada > 0) dano += 10;
+
+        inimigo.vida -= dano;
+        log(`Você causou ${dano} de dano!`);
+
+        decrementarBuffs();
+        decrementarCooldowns();
+
+        if (inimigo.vida <= 0) {
+          vitoria();
+        } else {
+          turnoInimigo();
+        }
+
+      } else if (tipo === "usarPocao") {
+        if (jogador.pocoes > 0) {
+          jogador.vida = Math.min(jogador.vida + 30, 100);
+          jogador.pocoes--;
+          log("Você usou uma poção!");
+          decrementarCooldowns();
+        } else {
+          log("Sem poções!");
+        }
+      }
+      atualizarHUD();
+      desenhar();
+    }
+
+    function turnoInimigo() {
+      let danoRecebido = inimigo.ataque;
+      if (jogador.armadura || jogador.buffArmadura > 0) danoRecebido -= 5;
+
+      jogador.vida -= danoRecebido;
+      log(`O inimigo causou ${danoRecebido} de dano!`);
+      if (jogador.vida <= 0) {
+        alert("Você foi derrotado!");
+        location.reload();
+      }
+    }
+
+    function vitoria() {
+      log("🎉 Inimigo derrotado!");
+      jogador.xp += 10;
+      jogador.moedas += 5;
+      if (jogador.xp >= 20) {
+        jogador.nivel++;
+        jogador.xp = 0;
+        jogador.vida = 100;
+        jogador.mana = 50;
+        log("🔺 Subiu para o nível " + jogador.nivel + "!");
+      }
+      inimigo = gerarInimigo();
+    }
+
+    function abrirLoja() {
+      document.getElementById("loja").style.display = "block";
+    }
+
+    function fecharLoja() {
+      document.getElementById("loja").style.display = "none";
+    }
+
+    function comprar(item) {
+      if (item === "pocao" && jogador.moedas >= 5) {
+        jogador.moedas -= 5;
+        jogador.pocoes++;
+        log("🧪 Poção comprada!");
+      } else if (item === "espada" && jogador.moedas >= 15 && !jogador.espada) {
+        jogador.moedas -= 15;
+        jogador.espada = true;
+        log("🗡️ Espada comprada!");
+      } else if (item === "armadura" && jogador.moedas >= 15 && !jogador.armadura) {
+        jogador.moedas -= 15;
+        jogador.armadura = true;
+        log("🛡️ Armadura comprada!");
+      } else {
+        log("❌ Compra inválida ou moedas insuficientes.");
+      }
+      atualizarHUD();
+    }
+
+    function ativarBuff(tipo) {
+      if (jogador.mana < 10) {
+        log("Mana insuficiente!");
+        return;
+      }
+      if (tipo === "espada") {
+        if (jogador.cooldownEspada > 0) {
+          log(`🕒 Buff Espada está em cooldown por ${jogador.cooldownEspada} turnos.`);
+          return;
+        }
+        jogador.mana -= 10;
+        jogador.buffEspada = 3;
+        jogador.cooldownEspada = 5;
+        log("🗡️ Buff de espada ativado por 3 turnos!");
+      } else if (tipo === "armadura") {
+        if (jogador.cooldownArmadura > 0) {
+          log(`🕒 Buff Armadura está em cooldown por ${jogador.cooldownArmadura} turnos.`);
+          return;
+        }
+        jogador.mana -= 10;
+        jogador.buffArmadura = 3;
+        jogador.cooldownArmadura = 5;
+        log("🛡️ Buff de armadura ativado por 3 turnos!");
+      }
+      atualizarHUD();
+    }
+
+    function decrementarBuffs() {
+      if (jogador.buffEspada > 0) jogador.buffEspada--;
+      if (jogador.buffArmadura > 0) jogador.buffArmadura--;
+    }
+
+    function decrementarCooldowns() {
+      if (jogador.cooldownEspada > 0) jogador.cooldownEspada--;
+      if (jogador.cooldownArmadura > 0) jogador.cooldownArmadura--;
+    }
+
+    function log(msg) {
+      document.getElementById("log").textContent = msg;
+    }
+
+    desenhar();
+    atualizarHUD();
+  </script>
+</body>
+</html>
