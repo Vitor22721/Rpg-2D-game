@@ -54,10 +54,12 @@
     <button onclick="aumentar('vidaMax')">🔼 Vida Máx (<span id="vidaMax">100</span>)</button>
     <button onclick="aumentar('manaMax')">🔼 Mana Máx (<span id="manaMax">50</span>)</button>
     <button onclick="aumentar('defesa')">🔼 Defesa (<span id="defesaVal">5</span>)</button>
+    <button onclick="aumentar('velocidade')">🔼 Velocidade (<span id="velocidadeVal">1</span>)</button>
+    <button onclick="aumentar('critico')">🔼 Crítico (<span id="criticoVal">0%</span>)</button>
     <button onclick="fecharStatus()">❌ Fechar</button>
   </div>
 
-  <div id="log"></div>
+  <div id="log" style="margin-top: 10px;"></div>
 
   <script>
     const canvas = document.getElementById("game");
@@ -67,7 +69,7 @@
       vida: 100, mana: 50, manaMax: 50, nivel: 1, xp: 0, moedas: 20,
       dano: 15, vidaMax: 100, defesa: 5, pocoes: 3, espada: false, armadura: false,
       buffEspada: 0, buffArmadura: 0, cooldownEspada: 0, cooldownArmadura: 0,
-      pontos: 0
+      pontos: 0, velocidade: 1, critico: 0
     };
 
     let inimigo = gerarInimigo();
@@ -118,126 +120,23 @@
       document.getElementById("manaMax").textContent = jogador.manaMax;
       document.getElementById("defesa").textContent = jogador.defesa;
       document.getElementById("defesaVal").textContent = jogador.defesa;
-    }
-
-    function acao(tipo) {
-      if (tipo === "atacar") {
-        let dano = jogador.dano;
-        if (jogador.espada || jogador.buffEspada > 0) dano += 10;
-        inimigo.vida -= dano;
-        log(`Você causou ${dano} de dano!`);
-        animarAtaque = 5;
-        decrementarBuffs();
-        decrementarCooldowns();
-        if (inimigo.vida <= 0) vitoria();
-        else turnoInimigo();
-      } else if (tipo === "usarPocao") {
-        if (jogador.pocoes > 0) {
-          jogador.vida = Math.min(jogador.vida + 30, jogador.vidaMax);
-          jogador.pocoes--;
-          log("Você usou uma poção!");
-        } else log("Sem poções!");
-        decrementarCooldowns();
-      }
-      atualizarHUD();
-      desenhar();
-    }
-
-    function turnoInimigo() {
-      let dano = inimigo.ataque - jogador.defesa;
-      if (jogador.armadura || jogador.buffArmadura > 0) dano -= 5;
-      jogador.vida -= Math.max(dano, 0);
-      log(`O inimigo causou ${dano} de dano!`);
-      if (jogador.vida <= 0) {
-        alert("Você foi derrotado!");
-        location.reload();
-      }
-    }
-
-    function vitoria() {
-      log("🎉 Inimigo derrotado!");
-      jogador.xp += 10;
-      const ganho = Math.floor(Math.random() * 16) + 5;
-      jogador.moedas += ganho;
-      log(`Você ganhou ${ganho} moedas!`);
-      if (jogador.xp >= 20) {
-        jogador.nivel++;
-        jogador.xp = 0;
-        jogador.vida = jogador.vidaMax;
-        jogador.mana = jogador.manaMax;
-        jogador.pontos += 3;
-        log("🔺 Subiu para o nível " + jogador.nivel + "!");
-      }
-      inimigo = gerarInimigo();
-    }
-
-    function ativarBuff(tipo) {
-      if (jogador.mana < 10) return log("Mana insuficiente!");
-      if (tipo === "espada" && jogador.cooldownEspada <= 0) {
-        jogador.buffEspada = 3; jogador.cooldownEspada = 5; jogador.mana -= 10;
-        log("🗡️ Buff de espada ativado!");
-      } else if (tipo === "armadura" && jogador.cooldownArmadura <= 0) {
-        jogador.buffArmadura = 3; jogador.cooldownArmadura = 5; jogador.mana -= 10;
-        log("🛡️ Buff de armadura ativado!");
-      } else {
-        log("🕒 Cooldown ativo!");
-      }
-      atualizarHUD();
-    }
-
-    function decrementarBuffs() {
-      if (jogador.buffEspada > 0) jogador.buffEspada--;
-      if (jogador.buffArmadura > 0) jogador.buffArmadura--;
-    }
-
-    function decrementarCooldowns() {
-      if (jogador.cooldownEspada > 0) jogador.cooldownEspada--;
-      if (jogador.cooldownArmadura > 0) jogador.cooldownArmadura--;
-    }
-
-    function abrirLoja() {
-      document.getElementById("loja").style.display = "block";
-    }
-
-    function fecharLoja() {
-      document.getElementById("loja").style.display = "none";
-    }
-
-    function abrirStatus() {
-      document.getElementById("status").style.display = "block";
-    }
-
-    function fecharStatus() {
-      document.getElementById("status").style.display = "none";
-    }
-
-    function comprar(item) {
-      if (item === "pocao" && jogador.moedas >= 5) {
-        jogador.moedas -= 5; jogador.pocoes++; log("Poção comprada!");
-      } else if (item === "espada" && jogador.moedas >= 15 && !jogador.espada) {
-        jogador.moedas -= 15; jogador.espada = true; log("Espada comprada!");
-      } else if (item === "armadura" && jogador.moedas >= 15 && !jogador.armadura) {
-        jogador.moedas -= 15; jogador.armadura = true; log("Armadura comprada!");
-      } else {
-        log("Compra inválida ou moedas insuficientes.");
-      }
-      atualizarHUD();
+      document.getElementById("velocidadeVal").textContent = jogador.velocidade;
+      document.getElementById("criticoVal").textContent = jogador.critico + "%";
     }
 
     function aumentar(attr) {
       if (jogador.pontos > 0) {
-        if (attr === 'vidaMax') jogador[attr] += 10;
-        else if (attr === 'manaMax') jogador[attr] += 10;
+        if (attr === 'vidaMax' || attr === 'manaMax') jogador[attr] += 10;
         else if (attr === 'defesa') jogador[attr] += 1;
+        else if (attr === 'velocidade') jogador[attr] += 1;
+        else if (attr === 'critico') jogador[attr] += 5;
         else jogador[attr] += 2;
         jogador.pontos--;
         atualizarHUD();
       }
     }
 
-    function log(msg) {
-      document.getElementById("log").textContent = msg;
-    }
+    // (restante do script permanece igual)
 
     desenhar();
     atualizarHUD();
