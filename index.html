@@ -1,59 +1,71 @@
+<!DOCTYPE html>
 <html lang="pt-br">
 <head>
-<meta charset="UTF-8" />
-  <title>Simples RPG 2d</title>
-  <title>RPG com Buff, Bosses e Sistema de Pontos</title>
-<style>
-body { background: #111; color: white; font-family: sans-serif; text-align: center; }
-    canvas { background: #222; border: 2px solid #fff; display: block; margin: 10px auto; }
-    canvas { background: #333; border: 4px solid #0f0; display: block; margin: 10px auto; }
-button { padding: 6px 12px; margin: 5px; font-weight: bold; }
-    #hud, #acoes, #inventario, #loja, #log, #status { margin-top: 10px; }
-    #hud, #acoes, #inventario, #loja, #log, #status, #fim { margin-top: 10px; }
-    #fim { font-size: 24px; color: yellow; display: none; }
-</style>
+  <meta charset="UTF-8" />
+  <title>🔥 RPG Game 2D com Buffs, Bosses e Atributos 🔥</title>
+  <style>
+    body {
+      background: #111;
+      color: white;
+      font-family: sans-serif;
+      text-align: center;
+    }
+
+    canvas {
+      background: #333;
+      border: 4px solid #0f0;
+      display: block;
+      margin: 10px auto;
+    }
+
+    button {
+      padding: 6px 12px;
+      margin: 5px;
+      font-weight: bold;
+    }
+
+    #hud, #acoes, #inventario, #loja, #status, #fim, #log {
+      margin-top: 10px;
+    }
+
+    #fim {
+      font-size: 24px;
+      color: yellow;
+      display: none;
+    }
+  </style>
 </head>
 <body>
-  <h1>🔥 RPG Game 2D 🔥</h1>
   <h1>🔥 RPG Game 2D com Buffs, Bosses e Atributos 🔥</h1>
-<canvas id="game" width="640" height="360"></canvas>
+  <canvas id="game" width="640" height="360"></canvas>
 
-<div id="hud">
-    ❤️ Vida: <span id="vida">100%</span> |
+  <div id="hud">
     ❤️ Vida: <span id="vida">100</span> |
-🔮 Mana: <span id="mana">50</span> |
-🛡️ Defesa: <span id="defesa">5</span> |
-⭐ Nível: <span id="nivel">1</span> |
-📘 XP: <span id="xp">0</span> |
-    💰 Moedas: <span id="moedas">20</span>
+    🔮 Mana: <span id="mana">50</span> |
+    🛡️ Defesa: <span id="defesa">5</span> |
+    ⭐ Nível: <span id="nivel">1</span> |
+    📘 XP: <span id="xp">0</span> |
     💰 Moedas: <span id="moedas">20</span> |
     🧠 Pontos: <span id="pontos">0</span>
-</div>
+  </div>
 
-<div id="inventario">
-@@ -36,110 +38,223 @@
-<button onclick="ativarBuff('espada')">🗡️ Buff Espada</button>
-<button onclick="ativarBuff('armadura')">🛡️ Buff Armadura</button>
-<button onclick="abrirLoja()">🛒 Loja</button>
+  <div id="acoes">
+    <button onclick="acao('atacar')">⚔️ Atacar</button>
+    <button onclick="acao('usarPocao')">🧪 Usar Poção</button>
+    <button onclick="ativarBuff('espada')">🗡️ Buff Espada</button>
+    <button onclick="ativarBuff('armadura')">🛡️ Buff Armadura</button>
+    <button onclick="abrirLoja()">🛒 Loja</button>
     <button onclick="abrirStatus()">📊 Atributos</button>
   </div>
 
-  <div id="status">
-    <h3>Distribuir Pontos</h3>
-    <button onclick="aumentar('vida')">+ Vida</button>
-    <button onclick="aumentar('mana')">+ Mana</button>
-    <button onclick="aumentar('defesa')">+ Defesa</button>
-    <button onclick="aumentar('dano')">+ Dano</button>
-</div>
-
-<div id="loja" style="display: none;">
-<h3>🛍️ Loja</h3>
-<button onclick="comprar('pocao')">🧪 Poção (5 💰)</button>
-<button onclick="comprar('espada')">🗡️ Espada (15 💰)</button>
-<button onclick="comprar('armadura')">🛡️ Armadura (15 💰)</button>
+  <div id="loja" style="display: none;">
+    <h3>🛍️ Loja</h3>
+    <button onclick="comprar('pocao')">🧪 Poção (5 💰)</button>
+    <button onclick="comprar('espada')">🗡️ Espada (15 💰)</button>
+    <button onclick="comprar('armadura')">🛡️ Armadura (15 💰)</button>
     <button onclick="comprar('anel')">💍 Anel Mágico (20 💰)</button>
-<button onclick="fecharLoja()">❌ Fechar</button>
-</div>
+    <button onclick="fecharLoja()">❌ Fechar</button>
+  </div>
 
   <div id="status" style="display: none;">
     <h3>📊 Atributos</h3>
@@ -67,110 +79,101 @@ button { padding: 6px 12px; margin: 5px; font-weight: bold; }
     <button onclick="fecharStatus()">❌ Fechar</button>
   </div>
 
-  <div id="log" style="margin-top: 10px;"></div>
   <div id="log"></div>
   <div id="fim">🎉 Parabéns! Você zerou o jogo ao atingir o nível 100! 🎉</div>
 
-<script>
-const canvas = document.getElementById("game");
-const ctx = canvas.getContext("2d");
+  <script>
+    const canvas = document.getElementById("game");
+    const ctx = canvas.getContext("2d");
+
+    const jogador = {
+      vida: 100,
+      vidaMax: 100,
+      mana: 50,
+      manaMax: 50,
+      defesa: 5,
+      dano: 15,
+      nivel: 1,
+      xp: 0,
+      moedas: 20,
+      pontos: 0,
+      pocoes: 3,
+      espada: false,
+      armadura: false,
+      buffEspada: 0,
+      buffArmadura: 0,
+      cooldownEspada: 0,
+      cooldownArmadura: 0,
+      velocidade: 1,
+      critico: 0
+    };
+
     let pontosPendentes = 0;
-
-const jogador = {
-      vida: 100, mana: 50, manaMax: 50, nivel: 1, xp: 0, moedas: 20,
-      dano: 15, vidaMax: 100, defesa: 5, pocoes: 3, espada: false, armadura: false,
-      buffEspada: 0, buffArmadura: 0, cooldownEspada: 0, cooldownArmadura: 0,
-      pontos: 0, velocidade: 1, critico: 0
-      vidaMax: 100, vida: 100, mana: 50, defesa: 5,
-      nivel: 1, xp: 0, moedas: 20, dano: 10,
-      pocoes: 3, espada: false, armadura: false,
-      buffEspada: 0, buffArmadura: 0,
-      cooldownEspada: 0, cooldownArmadura: 0,
-};
-
-let inimigo = gerarInimigo();
     let animarAtaque = 0;
+    let inimigo = gerarInimigo();
 
-function gerarInimigo() {
-if (jogador.nivel % 10 === 0) {
-const bosses = ["Orc", "Dragão", "Minotauro"];
-        const nome = bosses[Math.floor(Math.random() * bosses.length)];
-        const vidaBase = 200 + jogador.nivel * 15;
-        const ataque = 30 + jogador.nivel * 3;
-        log(`⚠️ BOSS: ${nome} apareceu!`);
-        return { vida: vidaBase, ataque };
+    function gerarInimigo() {
+      if (jogador.nivel % 10 === 0) {
+        const bosses = ["Orc", "Dragão", "Minotauro"];
         const tipo = bosses[Math.floor(Math.random() * bosses.length)];
         return { vida: 150 + jogador.nivel * 10, ataque: 25, tipo };
-} else {
-        const vidaBase = 50 + jogador.nivel * 10;
-        const ataque = 10 + jogador.nivel * 2;
-        return { vida: vidaBase, ataque };
+      } else {
         return { vida: 50 + jogador.nivel * 10, ataque: 10 + jogador.nivel * 2, tipo: "Goblin" };
-}
-}
+      }
+    }
 
-function desenhar() {
-ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.fillStyle = "blue";
-      ctx.fillRect(100 + (animarAtaque ? 10 : 0), 150, 50, 50);
+    function desenhar() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Jogador
       ctx.fillStyle = "#0f0";
       ctx.beginPath();
-      ctx.arc(120, 180, 25, 0, Math.PI * 2); // jogador
+      ctx.arc(120, 180, 25, 0, Math.PI * 2);
       ctx.fill();
 
       if (jogador.espada) {
         ctx.fillStyle = "silver";
         ctx.fillRect(145, 170, 15, 5);
       }
+
       if (jogador.armadura) {
         ctx.strokeStyle = "cyan";
         ctx.strokeRect(95, 155, 50, 50);
       }
 
-ctx.fillStyle = "red";
+      // Inimigo
+      ctx.fillStyle = "red";
       ctx.fillRect(480, 150, 50, 50);
-      ctx.fillRect(460, 150, 50, 50); // inimigo genérico
-ctx.fillStyle = "white";
+      ctx.fillStyle = "white";
       ctx.font = "16px sans-serif";
-      ctx.fillText("Inimigo HP: " + inimigo.vida, 460, 140);
-      if (animarAtaque) {
+      ctx.fillText(`${inimigo.tipo} HP: ${inimigo.vida}`, 450, 140);
+
+      if (animarAtaque > 0) {
         animarAtaque--;
         requestAnimationFrame(desenhar);
       }
-      ctx.fillText(`${inimigo.tipo} HP: ${inimigo.vida}`, 450, 140);
-}
+    }
 
-function atualizarHUD() {
-      document.getElementById("vida").textContent = jogador.vida + "%";
+    function atualizarHUD() {
       document.getElementById("vida").textContent = jogador.vida;
-document.getElementById("mana").textContent = jogador.mana;
-document.getElementById("nivel").textContent = jogador.nivel;
-document.getElementById("xp").textContent = jogador.xp;
-document.getElementById("moedas").textContent = jogador.moedas;
+      document.getElementById("mana").textContent = jogador.mana;
       document.getElementById("defesa").textContent = jogador.defesa;
-      document.getElementById("pontos").textContent = pontosPendentes;
-document.getElementById("pocoes").textContent = jogador.pocoes + " poções";
-document.getElementById("espada").textContent = "Espada: " + (jogador.espada ? "✅" : "❌");
-document.getElementById("armadura").textContent = "Armadura: " + (jogador.armadura ? "✅" : "❌");
+      document.getElementById("nivel").textContent = jogador.nivel;
+      document.getElementById("xp").textContent = jogador.xp;
+      document.getElementById("moedas").textContent = jogador.moedas;
       document.getElementById("pontos").textContent = jogador.pontos;
       document.getElementById("dano").textContent = jogador.dano;
       document.getElementById("vidaMax").textContent = jogador.vidaMax;
       document.getElementById("manaMax").textContent = jogador.manaMax;
-      document.getElementById("defesa").textContent = jogador.defesa;
       document.getElementById("defesaVal").textContent = jogador.defesa;
       document.getElementById("velocidadeVal").textContent = jogador.velocidade;
       document.getElementById("criticoVal").textContent = jogador.critico + "%";
-}
+    }
 
-    function aumentar(attr) {
-      if (jogador.pontos > 0) {
-        if (attr === 'vidaMax' || attr === 'manaMax') jogador[attr] += 10;
-        else if (attr === 'defesa') jogador[attr] += 1;
-        else if (attr === 'velocidade') jogador[attr] += 1;
-        else if (attr === 'critico') jogador[attr] += 5;
-        else jogador[attr] += 2;
-        jogador.pontos--;
-        atualizarHUD();
+    function log(msg) {
+      document.getElementById("log").textContent = msg;
+    }
+
     function acao(tipo) {
       if (tipo === "atacar") {
         let dano = jogador.dano;
@@ -192,11 +195,12 @@ document.getElementById("armadura").textContent = "Armadura: " + (jogador.armadu
           jogador.vida = Math.min(jogador.vida + 30, jogador.vidaMax);
           jogador.pocoes--;
           log("Você usou uma poção!");
-          decrementarCooldowns();
         } else {
           log("Sem poções!");
         }
+        decrementarCooldowns();
       }
+
       atualizarHUD();
       desenhar();
     }
@@ -217,33 +221,23 @@ document.getElementById("armadura").textContent = "Armadura: " + (jogador.armadu
     function vitoria() {
       log(`🎉 ${inimigo.tipo} derrotado!`);
       jogador.xp += 10;
-      const recompensa = Math.floor(Math.random() * 16) + 5;
-      jogador.moedas += recompensa;
+      jogador.moedas += Math.floor(Math.random() * 16) + 5;
 
       if (jogador.xp >= 20) {
         jogador.nivel++;
         jogador.xp = 0;
-        pontosPendentes += 3;
+        jogador.pontos += 3;
         jogador.vida = jogador.vidaMax;
-        jogador.mana = 50;
+        jogador.mana = jogador.manaMax;
         log(`🔺 Nível ${jogador.nivel}!`);
-
         if (jogador.nivel === 100) {
           document.getElementById("fim").style.display = "block";
         }
-}
+      }
+
       inimigo = gerarInimigo();
     }
 
-    function abrirLoja() {
-      document.getElementById("loja").style.display = "block";
-    }
-
-    function fecharLoja() {
-      document.getElementById("loja").style.display = "none";
-}
-
-    // (restante do script permanece igual)
     function comprar(item) {
       if (item === "pocao" && jogador.moedas >= 5) {
         jogador.moedas -= 5;
@@ -263,8 +257,25 @@ document.getElementById("armadura").textContent = "Armadura: " + (jogador.armadu
       atualizarHUD();
     }
 
+    function abrirLoja() {
+      document.getElementById("loja").style.display = "block";
+    }
+
+    function fecharLoja() {
+      document.getElementById("loja").style.display = "none";
+    }
+
+    function abrirStatus() {
+      document.getElementById("status").style.display = "block";
+    }
+
+    function fecharStatus() {
+      document.getElementById("status").style.display = "none";
+    }
+
     function ativarBuff(tipo) {
       if (jogador.mana < 10) return log("Mana insuficiente!");
+
       if (tipo === "espada" && jogador.cooldownEspada === 0) {
         jogador.mana -= 10;
         jogador.buffEspada = 3;
@@ -278,6 +289,7 @@ document.getElementById("armadura").textContent = "Armadura: " + (jogador.armadu
       } else {
         log("Buff em cooldown!");
       }
+
       atualizarHUD();
     }
 
@@ -292,21 +304,19 @@ document.getElementById("armadura").textContent = "Armadura: " + (jogador.armadu
     }
 
     function aumentar(stat) {
-      if (pontosPendentes <= 0) return;
-      if (stat === "vida") jogador.vidaMax += 10;
-      if (stat === "mana") jogador.mana += 5;
-      if (stat === "defesa") jogador.defesa++;
-      if (stat === "dano") jogador.dano += 2;
-      pontosPendentes--;
+      if (jogador.pontos <= 0) return;
+      if (stat === "vidaMax") jogador.vidaMax += 10;
+      else if (stat === "manaMax") jogador.manaMax += 10;
+      else if (stat === "defesa") jogador.defesa++;
+      else if (stat === "dano") jogador.dano += 2;
+      else if (stat === "velocidade") jogador.velocidade++;
+      else if (stat === "critico") jogador.critico += 5;
+      jogador.pontos--;
       atualizarHUD();
     }
 
-    function log(msg) {
-      document.getElementById("log").textContent = msg;
-    }
-
-desenhar();
-atualizarHUD();
-</script>
+    desenhar();
+    atualizarHUD();
+  </script>
 </body>
 </html>
