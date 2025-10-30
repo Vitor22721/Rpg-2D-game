@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="pt-br">
+<!DOCTYPE html>
+<html lang="pt-br">
 <head>
   <meta charset="UTF-8" />
   <title>RPG Game</title>
@@ -11,33 +12,43 @@
 </head>
 <body>
   <h1>🔥 RPG Game 🔥</h1>
-  <canvas id="game" width="640" height="360"></canvas>  <div id="hud">
+  <canvas id="game" width="640" height="360"></canvas>
+
+  <div id="hud">
     ❤️ Vida: <span id="vida">100%</span> |
     🔮 Mana: <span id="mana">50</span> |
     🛡️ Defesa: <span id="defesa">5</span> |
     ⭐ Nível: <span id="nivel">1</span> |
     📘 XP: <span id="xp">0</span> |
     💰 Moedas: <span id="moedas">20</span>
-  </div>  <div id="inventario">
+  </div>
+
+  <div id="inventario">
     🎒 Inventário:
     <span id="pocoes">3 poções</span> |
     <span id="espada">Espada: ❌</span> |
     <span id="armadura">Armadura: ❌</span> |
     <span id="itemUnico">Item Único: ❌</span>
-  </div>  <div id="acoes">
+  </div>
+
+  <div id="acoes">
     <button onclick="acao('atacar')">⚔️ Atacar</button>
     <button onclick="acao('usarPocao')">🧪 Usar Poção</button>
     <button onclick="ativarBuff('espada')">🗡️ Buff Espada</button>
     <button onclick="ativarBuff('armadura')">🛡️ Buff Armadura</button>
     <button onclick="abrirLoja()">🛒 Loja</button>
     <button onclick="abrirStatus()">📊 Atributos</button>
-  </div>  <div id="loja" style="display: none;">
+  </div>
+
+  <div id="loja" style="display: none;">
     <h3>🛍️ Loja</h3>
     <button onclick="comprar('pocao')">🧪 Poção (5 💰)</button>
     <button onclick="comprar('espada')">🗡️ Espada (15 💰)</button>
     <button onclick="comprar('armadura')">🛡️ Armadura (15 💰)</button>
     <button onclick="fecharLoja()">❌ Fechar</button>
-  </div>  <div id="status" style="display: none;">
+  </div>
+
+  <div id="status" style="display: none;">
     <h3>📊 Atributos</h3>
     Pontos disponíveis: <span id="pontos">0</span><br>
     <button onclick="aumentar('dano')">🔼 Dano (<span id="dano">15</span>)</button>
@@ -47,7 +58,11 @@
     <button onclick="aumentar('velocidade')">🔼 Velocidade (<span id="velocidadeVal">1</span>)</button>
     <button onclick="aumentar('critico')">🔼 Crítico (<span id="criticoVal">0%</span>)</button>
     <button onclick="fecharStatus()">❌ Fechar</button>
-  </div>  <div id="log" style="margin-top: 10px;"></div>  <script>
+  </div>
+
+  <div id="log" style="margin-top: 10px;"></div>
+
+  <script>
     const canvas = document.getElementById("game");
     const ctx = canvas.getContext("2d");
 
@@ -59,8 +74,8 @@
     };
 
     let inimigo = gerarInimigo();
-    let animarAtaque = 0;
 
+    // 🔹 Função para gerar inimigos
     function gerarInimigo() {
       if (jogador.nivel % 10 === 0) {
         const bosses = ["Orc", "Dragão", "Minotauro"];
@@ -72,8 +87,86 @@
       } else {
         const vidaBase = 50 + jogador.nivel * 10;
         const ataque = 10 + jogador.nivel * 2;
-        return { vida: vidaBase, ataque, boss: false };
+        return { vida: vidaBase, ataque, boss: false, nome: "Inimigo" };
       }
+    }
+
+    // 🔹 Função para mostrar mensagens
+    function log(texto) {
+      const logDiv = document.getElementById("log");
+      const linha = document.createElement("div");
+      linha.textContent = texto;
+      logDiv.prepend(linha);
+    }
+
+    // 🔹 Função que desenha o jogador e inimigo
+    function desenhar() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Jogador
+      ctx.fillStyle = "#0f0";
+      ctx.beginPath();
+      ctx.arc(120, 180, 25, 0, Math.PI * 2);
+      ctx.fill();
+
+      if (jogador.espada) {
+        ctx.fillStyle = "silver";
+        ctx.fillRect(145, 170, 15, 5);
+      }
+
+      if (jogador.armadura) {
+        ctx.strokeStyle = "cyan";
+        ctx.strokeRect(95, 155, 50, 50);
+      }
+
+      // Inimigo
+      ctx.fillStyle = inimigo.boss ? "orange" : "red";
+      ctx.fillRect(480, 150, 50, 50);
+      ctx.fillStyle = "white";
+      ctx.font = "16px sans-serif";
+      ctx.fillText(`${inimigo.nome} HP: ${inimigo.vida}`, 440, 140);
+
+      requestAnimationFrame(desenhar);
+    }
+
+    // 🔹 Atualiza HUD
+    function atualizarHUD() {
+      document.getElementById("vida").textContent = jogador.vida + "%";
+      document.getElementById("mana").textContent = jogador.mana;
+      document.getElementById("defesa").textContent = jogador.defesa;
+      document.getElementById("nivel").textContent = jogador.nivel;
+      document.getElementById("xp").textContent = jogador.xp;
+      document.getElementById("moedas").textContent = jogador.moedas;
+      document.getElementById("pocoes").textContent = jogador.pocoes + " poções";
+      document.getElementById("espada").textContent = "Espada: " + (jogador.espada ? "✅" : "❌");
+      document.getElementById("armadura").textContent = "Armadura: " + (jogador.armadura ? "✅" : "❌");
+      document.getElementById("itemUnico").textContent = "Item Único: " + (jogador.itemUnico ? "✅" : "❌");
+    }
+
+    // 🔹 Função principal de ação
+    function acao(tipo) {
+      if (tipo === "atacar") {
+        const dano = jogador.dano + (jogador.espada ? 5 : 0);
+        inimigo.vida -= dano;
+        log(`🗡️ Você causou ${dano} de dano!`);
+
+        if (inimigo.vida <= 0) {
+          vitoria();
+        } else {
+          jogador.vida -= inimigo.ataque - jogador.defesa;
+          if (jogador.vida <= 0) {
+            jogador.vida = 0;
+            log("💀 Você foi derrotado!");
+          }
+        }
+      } else if (tipo === "usarPocao" && jogador.pocoes > 0) {
+        jogador.vida = Math.min(jogador.vida + 30, jogador.vidaMax);
+        jogador.pocoes--;
+        log("🧪 Você usou uma poção!");
+      } else {
+        log("❌ Ação inválida!");
+      }
+      atualizarHUD();
     }
 
     function vitoria() {
@@ -95,18 +188,14 @@
         jogador.mana = jogador.manaMax;
         jogador.pontos += 3;
         log("🔺 Subiu para o nível " + jogador.nivel + "!");
-        if (jogador.nivel === 100) {
-          alert("🎉 Parabéns! Você zerou o jogo!");
-        }
       }
+
       inimigo = gerarInimigo();
       atualizarHUD();
-      desenhar();
     }
 
-    function atualizarHUD() {
-      document.getElementById("itemUnico").textContent = "Item Único: " + (jogador.itemUnico ? "✅" : "❌");
-      // resto do HUD mantido
-    }
-  </script></body>
+    atualizarHUD();
+    desenhar();
+  </script>
+</body>
 </html>
