@@ -2,12 +2,12 @@
 <html lang="pt-br">
 <head>
   <meta charset="UTF-8" />
-  <title>RPG Game</title>
+  <title>🔥 RPG Game 🔥</title>
   <style>
     body { background: #444; color: white; font-family: sans-serif; text-align: center; }
     canvas { background: #222; border: 2px solid #fff; display: block; margin: 10px auto; }
     button { padding: 6px 12px; margin: 5px; font-weight: bold; }
-    #hud, #acoes, #inventario, #loja, #log, #status, #missoes { margin-top: 10px; }
+    #hud, #acoes, #inventario, #loja, #log, #status { margin-top: 10px; }
   </style>
 </head>
 <body>
@@ -34,13 +34,10 @@
   <div id="acoes">
     <button onclick="acao('atacar')">⚔️ Atacar</button>
     <button onclick="acao('usarPocao')">🧪 Usar Poção</button>
-    <button onclick="ativarBuff('espada')">🗡️ Buff Espada</button>
-    <button onclick="ativarBuff('armadura')">🛡️ Buff Armadura</button>
     <button onclick="abrirLoja()">🛒 Loja</button>
-    <button onclick="abrirStatus()">📊 Atributos</button>
   </div>
 
-  <div id="loja" style="display: none;">
+  <div id="loja" style="display:none;">
     <h3>🛍️ Loja</h3>
     <button onclick="comprar('pocao')">🧪 Poção (5 💰)</button>
     <button onclick="comprar('espada')">🗡️ Espada (15 💰)</button>
@@ -48,216 +45,138 @@
     <button onclick="fecharLoja()">❌ Fechar</button>
   </div>
 
-  <div id="status" style="display: none;">
-    <h3>📊 Atributos</h3>
-    Pontos disponíveis: <span id="pontos">0</span><br>
-    <button onclick="aumentar('dano')">🔼 Dano (<span id="dano">15</span>)</button>
-    <button onclick="aumentar('vidaMax')">🔼 Vida Máx (<span id="vidaMax">100</span>)</button>
-    <button onclick="aumentar('manaMax')">🔼 Mana Máx (<span id="manaMax">50</span>)</button>
-    <button onclick="aumentar('defesa')">🔼 Defesa (<span id="defesaVal">5</span>)</button>
-    <button onclick="aumentar('velocidade')">🔼 Velocidade (<span id="velocidadeVal">1</span>)</button>
-    <button onclick="aumentar('critico')">🔼 Crítico (<span id="criticoVal">0%</span>)</button>
-    <button onclick="fecharStatus()">❌ Fechar</button>
-  </div>
-
-  <div id="log" style="margin-top: 10px;"></div>
+  <div id="log" style="margin-top:10px;"></div>
 
   <script>
-  // 🎮 Criação de personagem antes do jogo começar
-  function criarPersonagem() {
-    let nome = prompt("Digite o nome do seu personagem:");
-    while (!nome || nome.trim() === "") {
-      nome = prompt("Nome inválido! Digite o nome do seu personagem:");
-    }
+    // 🧙‍♂️ CRIAÇÃO DE PERSONAGEM
+    function criarPersonagem() {
+      let nome = prompt("Digite o nome do seu personagem:");
+      while (!nome || nome.trim() === "") nome = prompt("Nome inválido! Digite o nome do seu personagem:");
 
-    let escolhaRaca;
-    const racasValidas = ["1", "2", "3"];
-    while (true) {
-      escolhaRaca = prompt("Escolha sua raça:\n1. Anão\n2. Elfo\n3. Humano");
-      if (racasValidas.includes(escolhaRaca)) break;
-      alert("Opção inválida! Digite 1, 2 ou 3.");
-    }
+      let raca;
+      while (true) {
+        const r = prompt("Escolha sua raça:\n1. Anão\n2. Elfo\n3. Humano");
+        if (r === "1") { raca = "Anão"; break; }
+        if (r === "2") { raca = "Elfo"; break; }
+        if (r === "3") { raca = "Humano"; break; }
+        alert("Opção inválida!");
+      }
 
-    let raca = escolhaRaca === "1" ? "Anão" : escolhaRaca === "2" ? "Elfo" : "Humano";
+      let classe;
+      while (true) {
+        const c = prompt("Escolha sua classe:\n1. Guerreiro\n2. Mago\n3. Arqueiro");
+        if (c === "1") { classe = "Guerreiro"; break; }
+        if (c === "2") { classe = "Mago"; break; }
+        if (c === "3") { classe = "Arqueiro"; break; }
+        alert("Opção inválida!");
+      }
 
-    let escolhaClasse;
-    const classesValidas = ["1", "2", "3"];
-    while (true) {
-      escolhaClasse = prompt("Escolha sua classe:\n1. Guerreiro\n2. Mago\n3. Arqueiro");
-      if (classesValidas.includes(escolhaClasse)) break;
-      alert("Opção inválida! Digite 1, 2 ou 3.");
-    }
+      let atributos = { forca: 5, magia: 5, agilidade: 5, vida: 50 };
 
-    let classe = escolhaClasse === "1" ? "Guerreiro" : escolhaClasse === "2" ? "Mago" : "Arqueiro";
-
-    let atributos = { forca: 5, magia: 5, agilidade: 5, vida: 50 };
-
-    function aplicar_bonus(atributos, raca, classe) {
       if (raca === "Anão") { atributos.forca += 2; atributos.vida += 10; }
-      else if (raca === "Elfo") { atributos.agilidade += 2; atributos.magia += 1; }
+      if (raca === "Elfo") { atributos.agilidade += 2; atributos.magia += 1; }
 
       if (classe === "Guerreiro") atributos.forca += 3;
-      else if (classe === "Mago") atributos.magia += 3;
-      else if (classe === "Arqueiro") atributos.agilidade += 3;
+      if (classe === "Mago") atributos.magia += 3;
+      if (classe === "Arqueiro") atributos.agilidade += 3;
 
-      return atributos;
+      alert(`--- Ficha ---\nNome: ${nome}\nRaça: ${raca}\nClasse: ${classe}\nForça: ${atributos.forca}\nMagia: ${atributos.magia}\nAgilidade: ${atributos.agilidade}\nVida: ${atributos.vida}`);
+
+      return { nome, raca, classe, atributos };
     }
 
-    const atributosFinais = aplicar_bonus(atributos, raca, classe);
+    const personagem = criarPersonagem();
 
-    alert(`--- Ficha de Personagem ---\nNome: ${nome}\nRaça: ${raca}\nClasse: ${classe}\nForça: ${atributosFinais.forca}\nMagia: ${atributosFinais.magia}\nAgilidade: ${atributosFinais.agilidade}\nVida: ${atributosFinais.vida}`);
+    // 🧾 JOGADOR
+    const canvas = document.getElementById("game");
+    const ctx = canvas.getContext("2d");
 
-    return { nome, raca, classe, atributos: atributosFinais };
-  }
+    const jogador = {
+      ...personagem,
+      vida: 100, mana: 50, manaMax: 50, nivel: 1, xp: 0, moedas: 20,
+      dano: 15, vidaMax: 100, defesa: 5, pocoes: 3, espada: false, armadura: false,
+    };
 
-  const personagem = criarPersonagem();
-  console.log("Personagem criado:", personagem);
+    let inimigo = gerarInimigo();
 
-  // 🔹 Sistema principal do jogo
-  const canvas = document.getElementById("game");
-  const ctx = canvas.getContext("2d");
-
-  const jogador = {
-    nome: personagem.nome,
-    raca: personagem.raca,
-    classe: personagem.classe,
-    vida: personagem.atributos.vida,
-    mana: 50,
-    manaMax: 50,
-    nivel: 1,
-    xp: 0,
-    moedas: 20,
-    dano: 15,
-    vidaMax: personagem.atributos.vida,
-    defesa: 5,
-    pocoes: 3,
-    espada: false,
-    armadura: false,
-    buffEspada: 0,
-    buffArmadura: 0,
-    cooldownEspada: 0,
-    cooldownArmadura: 0,
-    pontos: 0,
-    velocidade: 1,
-    critico: 0,
-    itemUnico: false
-  };
-
-  // 🔹 Funções do jogo
-  function gerarInimigo() {
-    if (jogador.nivel % 10 === 0) {
-      const bosses = ["Orc", "Dragão", "Minotauro"];
-      const nome = bosses[Math.floor(Math.random() * bosses.length)];
-      const vidaBase = 200 + jogador.nivel * 15;
-      const ataque = 30 + jogador.nivel * 3;
-      log(`⚠️ BOSS: ${nome} apareceu!`);
-      return { vida: vidaBase, ataque, boss: true, nome };
-    } else {
+    // ⚔️ FUNÇÕES DO JOGO
+    function gerarInimigo() {
       const vidaBase = 50 + jogador.nivel * 10;
       const ataque = 10 + jogador.nivel * 2;
-      return { vida: vidaBase, ataque, boss: false, nome: "Inimigo" };
-    }
-  }
-
-  let inimigo = gerarInimigo();
-
-  function log(texto) {
-    const logDiv = document.getElementById("log");
-    const linha = document.createElement("div");
-    linha.textContent = texto;
-    logDiv.prepend(linha);
-  }
-
-  function desenhar() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.fillStyle = "#0f0";
-    ctx.beginPath();
-    ctx.arc(120, 180, 25, 0, Math.PI * 2);
-    ctx.fill();
-
-    if (jogador.espada) {
-      ctx.fillStyle = "silver";
-      ctx.fillRect(145, 170, 15, 5);
-    }
-    if (jogador.armadura) {
-      ctx.strokeStyle = "cyan";
-      ctx.strokeRect(95, 155, 50, 50);
+      return { vida: vidaBase, ataque, nome: "Inimigo" };
     }
 
-    ctx.fillStyle = inimigo.boss ? "orange" : "red";
-    ctx.fillRect(480, 150, 50, 50);
-    ctx.fillStyle = "white";
-    ctx.font = "16px sans-serif";
-    ctx.fillText(`${inimigo.nome} HP: ${inimigo.vida}`, 440, 140);
+    function log(texto) {
+      const div = document.getElementById("log");
+      const linha = document.createElement("div");
+      linha.textContent = texto;
+      div.prepend(linha);
+    }
 
-    requestAnimationFrame(desenhar);
-  }
+    function desenhar() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  function atualizarHUD() {
-    document.getElementById("vida").textContent = jogador.vida + "%";
-    document.getElementById("mana").textContent = jogador.mana;
-    document.getElementById("defesa").textContent = jogador.defesa;
-    document.getElementById("nivel").textContent = jogador.nivel;
-    document.getElementById("xp").textContent = jogador.xp;
-    document.getElementById("moedas").textContent = jogador.moedas;
-    document.getElementById("pocoes").textContent = jogador.pocoes + " poções";
-    document.getElementById("espada").textContent = "Espada: " + (jogador.espada ? "✅" : "❌");
-    document.getElementById("armadura").textContent = "Armadura: " + (jogador.armadura ? "✅" : "❌");
-    document.getElementById("itemUnico").textContent = "Item Único: " + (jogador.itemUnico ? "✅" : "❌");
-  }
+      // Jogador
+      ctx.fillStyle = "#0f0";
+      ctx.beginPath();
+      ctx.arc(120, 180, 25, 0, Math.PI * 2);
+      ctx.fill();
 
-  function acao(tipo) {
-    if (tipo === "atacar") {
-      const dano = jogador.dano + (jogador.espada ? 5 : 0);
-      inimigo.vida -= dano;
-      log(`🗡️ ${jogador.nome} causou ${dano} de dano!`);
+      // Inimigo
+      ctx.fillStyle = "red";
+      ctx.fillRect(480, 150, 50, 50);
 
-      if (inimigo.vida <= 0) {
-        vitoria();
+      ctx.fillStyle = "white";
+      ctx.font = "16px sans-serif";
+      ctx.fillText(`${inimigo.nome} HP: ${inimigo.vida}`, 440, 140);
+
+      requestAnimationFrame(desenhar);
+    }
+
+    function atualizarHUD() {
+      document.getElementById("vida").textContent = jogador.vida + "%";
+      document.getElementById("mana").textContent = jogador.mana;
+      document.getElementById("defesa").textContent = jogador.defesa;
+      document.getElementById("nivel").textContent = jogador.nivel;
+      document.getElementById("xp").textContent = jogador.xp;
+      document.getElementById("moedas").textContent = jogador.moedas;
+      document.getElementById("pocoes").textContent = jogador.pocoes + " poções";
+      document.getElementById("espada").textContent = "Espada: " + (jogador.espada ? "✅" : "❌");
+      document.getElementById("armadura").textContent = "Armadura: " + (jogador.armadura ? "✅" : "❌");
+      document.getElementById("itemUnico").textContent = "Item Único: ❌";
+    }
+
+    function acao(tipo) {
+      if (tipo === "atacar") {
+        const dano = jogador.dano + (jogador.espada ? 5 : 0);
+        inimigo.vida -= dano;
+        log(`🗡️ Você causou ${dano} de dano!`);
+        if (inimigo.vida <= 0) vitoria();
+      } else if (tipo === "usarPocao" && jogador.pocoes > 0) {
+        jogador.vida = Math.min(jogador.vida + 30, jogador.vidaMax);
+        jogador.pocoes--;
+        log("🧪 Você usou uma poção!");
       } else {
-        jogador.vida -= inimigo.ataque - jogador.defesa;
-        if (jogador.vida <= 0) {
-          jogador.vida = 0;
-          log("💀 Você foi derrotado!");
-        }
+        log("❌ Ação inválida!");
       }
-    } else if (tipo === "usarPocao" && jogador.pocoes > 0) {
-      jogador.vida = Math.min(jogador.vida + 30, jogador.vidaMax);
-      jogador.pocoes--;
-      log("🧪 Você usou uma poção!");
-    } else {
-      log("❌ Ação inválida!");
+      atualizarHUD();
     }
+
+    function vitoria() {
+      log("🎉 Inimigo derrotado!");
+      jogador.xp += 10;
+      jogador.moedas += 5;
+      if (jogador.xp >= 20) {
+        jogador.nivel++;
+        jogador.xp = 0;
+        jogador.vida = jogador.vidaMax;
+        log("🔺 Subiu para o nível " + jogador.nivel + "!");
+      }
+      inimigo = gerarInimigo();
+    }
+
     atualizarHUD();
-  }
-
-  function vitoria() {
-    log("🎉 Inimigo derrotado!");
-    const ganhoMoedas = Math.floor(Math.random() * 16) + 5;
-    jogador.xp += 10;
-    jogador.moedas += ganhoMoedas;
-    log(`Ganhou ${ganhoMoedas} moedas!`);
-
-    if (inimigo.boss && !jogador.itemUnico) {
-      jogador.itemUnico = true;
-      log(`🎁 Você obteve um item único do ${inimigo.nome}!`);
-    }
-
-    if (jogador.xp >= 20) {
-      jogador.nivel++;
-      jogador.xp = 0;
-      jogador.vida = jogador.vidaMax;
-      jogador.mana = jogador.manaMax;
-      jogador.pontos += 3;
-      log("🔺 Subiu para o nível " + jogador.nivel + "!");
-    }
-
-    inimigo = gerarInimigo();
-    atualizarHUD();
-  }
-
-  atualizarHUD();
-  desenhar();
+    desenhar();
   </script>
 </body>
 </html>
