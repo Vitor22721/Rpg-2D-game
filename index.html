@@ -2,335 +2,558 @@
 <html lang="pt-br">
 <head>
   <meta charset="UTF-8" />
-  <title>🔥 RPG Game 🔥</title>
+  <title>🔥 RPG Épico - Ascensão Elemental</title>
   <style>
-    body { background: #444; color: white; font-family: sans-serif; text-align: center; }
-    canvas { background: #222; border: 2px solid #fff; display: block; margin: 10px auto; }
-    button { padding: 6px 12px; margin: 5px; font-weight: bold; }
-    #hud, #acoes, #inventario, #loja, #log { margin-top: 10px; }
-    #log div { font-size: 12px; margin: 2px; padding: 4px; background: #333; border-radius: 4px; }
-    .destaque { color: #ffcc00; font-weight: bold; }
+    body { 
+      background: linear-gradient(to bottom, #0f0c29, #302b63, #24243e); 
+      color: #e0e0ff; font-family: 'Segoe UI', sans-serif; 
+      text-align: center; margin: 0; padding: 10px;
+    }
+    canvas { 
+      background: linear-gradient(to bottom, #a1c4fd 0%, #c2e9fb 40%, #d4fc79 100%); 
+      border: 5px solid #ffcc00; border-radius: 15px; 
+      box-shadow: 0 0 25px #ffcc00aa; display: block; margin: 15px auto;
+    }
+    button { 
+      padding: 9px 16px; margin: 5px; font-weight: bold; font-size: 1em;
+      background: linear-gradient(#4e54c8, #8f94fb); color: white; border: none; 
+      border-radius: 10px; cursor: pointer; transition: all 0.2s;
+    }
+    button:hover { transform: scale(1.07); box-shadow: 0 0 15px #ffcc00; }
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
+    #hud, #inventario, #acoes, #loja, #log, #saveHud { margin: 12px auto; max-width: 1000px; }
+    #saveHud button { background: linear-gradient(#2c3e50, #34495e); font-size: 0.9em; }
+    #log div { 
+      background: rgba(20,20,60,0.7); border-left: 5px solid #ffcc00; 
+      margin: 6px; padding: 8px 12px; border-radius: 8px; font-size: 0.95em;
+    }
+    .epico { color: #ff69b4; font-weight: bold; text-shadow: 0 0 8px #ff69b4; }
+    .destaque { color: #ffd700; font-weight: bold; }
+    .fogo   { color: #ff4500; }
+    .gelo   { color: #00b7eb; }
+    .raio   { color: #ffff00; }
+    .terra  { color: #8b4513; }
   </style>
 </head>
 <body>
-  <h1>🔥 RPG Game 🔥</h1>
-  <canvas id="game" width="640" height="360"></canvas>
+
+  <h1>🔥 <span class="epico">RPG Épico - Ascensão Elemental</span> 🔥</h1>
+
+  <div id="saveHud">
+    <button onclick="salvarJogo()">💾 Salvar Jogo</button>
+    <button onclick="carregarJogo()">📂 Carregar Jogo</button>
+    <button onclick="novoJogo()">🆕 Novo Jogo</button>
+  </div>
+
+  <canvas id="game" width="800" height="480"></canvas>
 
   <div id="hud">
-    ❤️ Vida: <span id="vida">100%</span> |
-    🔮 Mana: <span id="mana">50</span> |
-    🛡️ Defesa: <span id="defesa">5</span> |
-    ⭐ Nível: <span id="nivel">1</span> |
-    📘 XP: <span id="xp">0</span> |
-    💰 Moedas: <span id="moedas">20</span>
+    ❤️ <span id="vida">100%</span> | 
+    🔮 <span id="mana">80</span> | 
+    🛡️ <span id="defesa">8</span> | 
+    ⭐ Nível <span id="nivel">1</span> | 
+    XP <span id="xp">0</span> | 
+    💰 <span id="moedas">30</span> | 
+    Elemento: <span id="elemento">-</span>
   </div>
 
   <div id="inventario">
-    🎒 Inventário:
-    <span id="pocoes">3 poções</span> |
-    <span id="espada">Espada: ❌</span> |
-    <span id="armadura">Armadura: ❌</span> |
-    <span id="itemUnico">Item Único: ❌</span>
+    🎒 <b>Inventário:</b> 
+    <span id="pocoes">4 poções</span> | 
+    <span id="espada">Espada ❌</span> | 
+    <span id="armadura">Armadura ❌</span> | 
+    <span id="anel">Anel ❌</span> | 
+    <span id="cajado">Cajado ❌</span> | 
+    <span id="amuleto">Amuleto ❌</span> | 
+    <span id="botas">Botas ❌</span> | 
+    <span id="orbe">Orbe ❌</span> | 
+    <span id="capa">Capa ❌</span> | 
+    <span id="coroa">Coroa ❌</span>
   </div>
 
   <div id="acoes">
     <button onclick="acao('atacar')">⚔️ Atacar</button>
-    <button onclick="acao('magia')">✨ Magia</button>
+    <div id="magiasContainer"></div>
     <button onclick="acao('usarPocao')">🧪 Poção</button>
     <button onclick="abrirLoja()">🛒 Loja</button>
   </div>
 
-  <div id="loja" style="display:none;">
-    <h3>🛍️ Loja</h3>
-    <button onclick="comprar('pocao')">🧪 Poção (5 💰)</button>
-    <button onclick="comprar('espada')">🗡️ Espada (15 💰)</button>
-    <button onclick="comprar('armadura')">🛡️ Armadura (15 💰)</button>
-    <button onclick="fecharLoja()">❌ Fechar</button>
+  <div id="loja" style="display:none; background:rgba(30,30,80,0.9); padding:20px; border-radius:12px; max-width:1000px; margin:20px auto;">
+    <h3 class="epico">🛍️ LOJA MÍSTICA</h3>
+    <button onclick="comprar('pocao')">🧪 Poção (6 💰)</button>
+    <button onclick="comprar('espada')">🗡️ Espada Flamejante (24 💰)</button>
+    <button onclick="comprar('armadura')">🛡️ Armadura do Guardião (32 💰)</button>
+    <button onclick="comprar('anel')">💍 Anel do Arcanista (38 💰)</button>
+    <button onclick="comprar('cajado')">🔮 Cajado do Caos (45 💰)</button>
+    <button onclick="comprar('amuleto')">🪬 Amuleto da Vida (40 💰)</button>
+    <button onclick="comprar('botas')">👢 Botas do Vento (35 💰)</button>
+    <button onclick="comprar('orbe')">🌌 Orbe do Caos (80 💰)</button>
+    <button onclick="comprar('capa')">🧥 Capa da Sombra (50 💰)</button>
+    <button onclick="comprar('coroa')">👑 Coroa do Conquistador (65 💰)</button>
+    <br><button onclick="fecharLoja()" style="margin-top:15px; background:#e94560;">❌ Fechar Loja</button>
   </div>
 
   <div id="log"></div>
 
   <script>
-    // 🧙‍♂️ CRIAÇÃO DE PERSONAGEM
-    function criarPersonagem() {
-      let nome = prompt("Digite o nome do seu personagem:");
-      while (!nome || nome.trim() === "") nome = prompt("Nome inválido! Digite o nome do seu personagem:");
-
-      let raca;
-      while (true) {
-        const r = prompt("Escolha sua raça:\n1. Anão\n2. Elfo\n3. Humano");
-        if (r === "1") { raca = "Anão"; break; }
-        if (r === "2") { raca = "Elfo"; break; }
-        if (r === "3") { raca = "Humano"; break; }
-        alert("Opção inválida!");
-      }
-
-      let classe;
-      while (true) {
-        const c = prompt("Escolha sua classe:\n1. Guerreiro\n2. Mago\n3. Arqueiro");
-        if (c === "1") { classe = "Guerreiro"; break; }
-        if (c === "2") { classe = "Mago"; break; }
-        if (c === "3") { classe = "Arqueiro"; break; }
-        alert("Opção inválida!");
-      }
-
-      let atributos = { forca: 5, magia: 5, agilidade: 5, vida: 50 };
-      if (raca === "Anão") { atributos.forca += 2; atributos.vida += 10; }
-      if (raca === "Elfo") { atributos.agilidade += 2; atributos.magia += 1; }
-      if (classe === "Guerreiro") atributos.forca += 3;
-      if (classe === "Mago") atributos.magia += 3;
-      if (classe === "Arqueiro") atributos.agilidade += 3;
-
-      alert(`--- Ficha ---\nNome: ${nome}\nRaça: ${raca}\nClasse: ${classe}\nForça: ${atributos.forca}\nMagia: ${atributos.magia}\nAgilidade: ${atributos.agilidade}\nVida Base: ${atributos.vida}`);
-
-      return { nome, raca, classe, atributos };
-    }
-
-    const personagem = criarPersonagem();
-
-    // 🧾 JOGADOR
     const canvas = document.getElementById("game");
     const ctx = canvas.getContext("2d");
 
-    const jogador = {
-      ...personagem,
-      vidaMax: 0, vida: 0,
-      manaMax: 0, mana: 0,
-      nivel: 1, xp: 0, moedas: 20,
-      dano: 0, defesa: 0,
-      pocoes: 3,
-      espada: false,
-      armadura: false,
-      itemUnico: false
-    };
+    let jogador, personagem, inimigo, gameOver = false;
+    let flashPlayer = 0, flashEnemy = 0;
+    let particulas = [];
 
-    // Inicializar stats
-    jogador.vidaMax = personagem.atributos.vida * 2;
-    jogador.vida = jogador.vidaMax;
-    jogador.manaMax = 20 + personagem.atributos.magia * 4;
-    jogador.mana = jogador.manaMax;
-    jogador.dano = Math.floor(personagem.atributos.forca * 2.5);
-    jogador.defesa = Math.floor(personagem.atributos.forca / 2) + 2;
+    // =============================================
+    // ELEMENTOS e magias (mantidos)
+    // =============================================
+    const elementos = [
+      { nome: "Fogo", cor: "fogo", magias: [
+        {nome: "Bola de Fogo", custo:15, danoBase:35, nivelMin:1},
+        {nome: "Chamas Eternas", custo:20, danoBase:45, nivelMin:3},
+        {nome: "Explosão Vulcânica", custo:28, danoBase:65, nivelMin:6},
+        {nome: "Meteoro Flamejante", custo:38, danoBase:90, nivelMin:10},
+        {nome: "Inferno Vivo", custo:50, danoBase:140, nivelMin:14}
+      ]},
+      { nome: "Gelo", cor: "gelo", magias: [
+        {nome: "Raio de Gelo", custo:16, danoBase:38, nivelMin:1},
+        {nome: "Névoa Glacial", custo:19, danoBase:30, nivelMin:3},
+        {nome: "Prisão de Gelo", custo:25, danoBase:50, nivelMin:6},
+        {nome: "Tempestade de Granizo", custo:34, danoBase:75, nivelMin:10},
+        {nome: "Era do Gelo", custo:48, danoBase:120, nivelMin:14}
+      ]},
+      { nome: "Raio", cor: "raio", magias: [
+        {nome: "Raio Simples", custo:18, danoBase:45, nivelMin:1},
+        {nome: "Corrente Elétrica", custo:23, danoBase:55, nivelMin:3},
+        {nome: "Explosão de Trovão", custo:30, danoBase:70, nivelMin:6},
+        {nome: "Tempestade de Raios", custo:42, danoBase:100, nivelMin:10},
+        {nome: "Julgamento Elétrico", custo:55, danoBase:160, nivelMin:14}
+      ]},
+      { nome: "Terra", cor: "terra", magias: [
+        {nome: "Espinhos Venenosos", custo:17, danoBase:40, nivelMin:1},
+        {nome: "Terremoto Leve", custo:22, danoBase:50, nivelMin:3},
+        {nome: "Muralha de Pedra", custo:26, danoBase:0, nivelMin:6},
+        {nome: "Fenda Tectônica", custo:36, danoBase:85, nivelMin:10},
+        {nome: "Ira da Natureza", custo:52, danoBase:130, nivelMin:14}
+      ]}
+    ];
 
-    let inimigo = gerarInimigo();
-    let gameOver = false;
+    function rolarD4() { return Math.floor(Math.random() * 4); }
 
-    // ⚔️ FUNÇÕES DO JOGO
+    function criarPersonagem() {
+      let nome = prompt("Nome do seu herói:") || "Herói Sem Nome";
+
+      let racaOpt = prompt(
+        "Raça (1-10):\n1-Humano 2-Elfo 3-Anão 4-Orc 5-Vampiro 6-Gnomo 7-Tiefling 8-Draconato 9-Centauro 10-Tabaxi"
+      ) || "1";
+
+      let classeOpt = prompt(
+        "Classe (1-10):\n1-Guerreiro 2-Mago 3-Paladino 4-Necromante 5-Ladino 6-Arqueiro 7-Bárbaro 8-Feiticeiro 9-Samurai 10-Invocador"
+      ) || "1";
+
+      const racas = ["Humano","Elfo","Anão","Orc","Vampiro","Gnomo","Tiefling","Draconato","Centauro","Tabaxi"];
+      const classes = ["Guerreiro","Mago","Paladino","Necromante","Ladino","Arqueiro","Bárbaro","Feiticeiro","Samurai","Invocador"];
+
+      let raca   = racas[parseInt(racaOpt)-1]   || "Humano";
+      let classe = classes[parseInt(classeOpt)-1] || "Guerreiro";
+
+      let elementoIndex = rolarD4();
+      let elemento = elementos[elementoIndex];
+
+      alert(`1d4 rolado → ${elementoIndex+1}\nElemento escolhido: ${elemento.nome.toUpperCase()}`);
+
+      let attr = { forca:6, magia:6, agilidade:6, vida:65, regen:0, critico:0, defesaExtra:0, iniciativa:0 };
+
+      // Raças
+      if (raca === "Humano")      { attr.forca +=2; attr.magia +=2; attr.agilidade +=2; }
+      if (raca === "Elfo")        { attr.agilidade +=5; attr.magia +=4; }
+      if (raca === "Anão")        { attr.forca +=6; attr.vida +=30; attr.defesaExtra +=4; }
+      if (raca === "Orc")         { attr.forca +=8; attr.vida +=35; attr.regen = 4; }
+      if (raca === "Vampiro")     { attr.agilidade +=5; attr.regen = 10; attr.critico = 0.18; }
+      if (raca === "Gnomo")       { attr.magia +=6; attr.critico = 0.22; }
+      if (raca === "Tiefling")    { attr.magia +=7; attr.regen = 3; }
+      if (raca === "Draconato")   { attr.forca +=5; attr.magia +=4; attr.vida +=20; }
+      if (raca === "Centauro")    { attr.forca +=4; attr.vida +=25; attr.iniciativa = 5; }
+      if (raca === "Tabaxi")      { attr.agilidade +=5; attr.critico +=0.15; attr.esquivaExtra = 0.20; }
+
+      // Classes
+      if (classe === "Guerreiro") attr.forca +=7;
+      if (classe === "Mago")      attr.magia +=10;
+      if (classe === "Paladino")  { attr.defesaExtra +=12; attr.magia +=5; }
+      if (classe === "Necromante"){ attr.magia +=11; attr.regen +=5; }
+      if (classe === "Ladino")    { attr.agilidade +=9; attr.critico +=0.28; }
+      if (classe === "Arqueiro")  attr.agilidade +=10;
+      if (classe === "Bárbaro")   { attr.forca +=9; attr.vida +=40; }
+      if (classe === "Feiticeiro"){ attr.magia +=9; attr.critico +=0.15; }
+      if (classe === "Samurai")   { attr.forca +=6; attr.defesaExtra +=10; attr.contraAtaque = 0.25; }
+      if (classe === "Invocador") { attr.magia +=8; attr.manaMaxExtra = 40; }
+
+      alert(`Herói criado!\n${nome} - ${raca} ${classe}\nElemento: \( {elemento.nome}\nForça: \){attr.forca} Magia:\( {attr.magia} Vida: \){attr.vida}`);
+
+      return { nome, raca, classe, elemento, atributos: attr };
+    }
+
+    function initJogo(reset = false) {
+      if (reset) {
+        personagem = criarPersonagem();
+      } else if (localStorage.getItem('rpgSave')) {
+        if (confirm("Carregar jogo salvo?")) {
+          carregarJogo();
+          return;
+        }
+      }
+
+      personagem = criarPersonagem();
+      jogador = {
+        ...personagem,
+        vidaMax: personagem.atributos.vida * 2.5,
+        vida: personagem.atributos.vida * 2.5,
+        manaMax: 50 + personagem.atributos.magia * 6 + (personagem.atributos.manaMaxExtra || 0),
+        mana: 50 + personagem.atributos.magia * 6 + (personagem.atributos.manaMaxExtra || 0),
+        nivel: 1, xp: 0, moedas: 40,
+        dano: Math.floor(personagem.atributos.forca * 3.4),
+        defesa: Math.floor(personagem.atributos.forca / 2) + 5 + personagem.atributos.defesaExtra,
+        pocoes: 4,
+        espada: false, armadura: false, anel: false, cajado: false, amuleto: false, botas: false, orbe: false, capa: false, coroa: false,
+        regenPassivo: personagem.atributos.regen || 0,
+        chanceCritico: personagem.atributos.critico || 0,
+        esquivaExtra: personagem.atributos.esquivaExtra || 0,
+        xpBonus: 1
+      };
+
+      inimigo = gerarInimigo();
+      gameOver = false;
+      atualizarHUD();
+      atualizarBotoesMagia();
+      log(`<b>A lenda de ${jogador.nome} - Mestre do ${jogador.elemento.nome} - começa!</b>`);
+    }
+
     function gerarInimigo() {
-      const nomesNormais = ["Goblin", "Orc", "Esqueleto", "Lobo Selvagem", "Bandido", "Troll", "Aranha Gigante"];
-      const ehBoss = (jogador.nivel % 5 === 0 && jogador.nivel >= 5);
+      const ehBoss = jogador.nivel % 5 === 0 && jogador.nivel >= 5;
+      let fraqueza = elementos[Math.floor(Math.random()*4)].nome;
 
       if (ehBoss) {
+        const bossNomes = ["Dragão de Obsidiana", "Lorde Lich", "Titã Abissal", "Imperador Demônio"];
         return {
-          nome: "🔥 BOSS: " + ["Dragão das Sombras", "Senhor dos Mortos", "Rei Demônio", "Colosso de Ferro"][Math.floor(Math.random()*4)],
-          vida: (40 + jogador.nivel * 20) * 2.5,
-          ataque: 10 + jogador.nivel * 4
+          nome: bossNomes[Math.floor(Math.random()*bossNomes.length)],
+          vida: (70 + jogador.nivel * 30) * 3,
+          ataque: 18 + jogador.nivel * 6,
+          fraqueza: fraqueza
         };
       }
 
-      const nome = nomesNormais[Math.floor(Math.random() * nomesNormais.length)];
-      const vida = 40 + jogador.nivel * 12;
-      const ataque = 7 + jogador.nivel * 2;
-      return { nome, vida, ataque };
+      const nomes = ["Goblin Xamã", "Orc Berserker", "Esqueleto Guerreiro", "Lobo Alfa", "Troll das Montanhas", "Aranha Venenosa", "Bandido Capitão"];
+      return {
+        nome: nomes[Math.floor(Math.random()*nomes.length)],
+        vida: 55 + jogador.nivel * 18,
+        ataque: 10 + jogador.nivel * 3.2,
+        fraqueza: fraqueza
+      };
     }
 
-    function log(texto) {
+    function log(msg) {
       const div = document.getElementById("log");
       const linha = document.createElement("div");
-      linha.innerHTML = texto;
+      linha.innerHTML = msg;
       div.prepend(linha);
-      if (div.children.length > 15) div.removeChild(div.lastChild);
-      div.scrollTop = 0;
+      if (div.children.length > 16) div.removeChild(div.lastChild);
+    }
+
+    function playSound(freq, dur = 150, type = 'sine') {
+      try {
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const oscillator = audioCtx.createOscillator();
+        oscillator.type = type;
+        oscillator.frequency.setValueAtTime(freq, audioCtx.currentTime);
+        oscillator.connect(audioCtx.destination);
+        oscillator.start();
+        oscillator.stop(audioCtx.currentTime + dur/1000);
+      } catch(e) {}
+    }
+
+    function criarParticula(x, y, cor, quantidade = 15) {
+      for (let i = 0; i < quantidade; i++) {
+        particulas.push({
+          x: x + (Math.random()*20 - 10),
+          y: y + (Math.random()*20 - 10),
+          vx: Math.random()*8 - 4,
+          vy: Math.random()*8 - 6,
+          vida: 25 + Math.random()*15,
+          cor: cor
+        });
+      }
     }
 
     function desenhar() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      // Jogador
-      ctx.fillStyle = "#0f0";
-      ctx.beginPath();
-      ctx.arc(120, 180, 28, 0, Math.PI * 2);
-      ctx.fill();
+      // Céu + nuvens
+      let grad = ctx.createLinearGradient(0,0,0,200);
+      grad.addColorStop(0,"#74ebd5"); grad.addColorStop(1,"#acb6e5");
+      ctx.fillStyle = grad; ctx.fillRect(0,0,canvas.width,canvas.height);
 
-      ctx.fillStyle = "white";
-      ctx.font = "14px sans-serif";
-      ctx.fillText(jogador.nome.substring(0,10), 85, 165);
-      ctx.fillText(Math.round((jogador.vida / jogador.vidaMax)*100) + "%", 95, 205);
+      ctx.fillStyle = "rgba(255,255,255,0.85)";
+      ctx.beginPath(); ctx.arc(180,90,45,0,Math.PI*2); ctx.arc(240,70,35,0,Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.arc(620,110,50,0,Math.PI*2); ctx.arc(680,95,38,0,Math.PI*2); ctx.fill();
+
+      // Chão
+      ctx.fillStyle = "#2e7d32"; ctx.fillRect(0,360,canvas.width,canvas.height-360);
+
+      // Partículas
+      particulas.forEach(p => {
+        ctx.fillStyle = p.cor;
+        ctx.globalAlpha = p.vida / 40;
+        ctx.fillRect(p.x, p.y, 5, 5);
+        p.x += p.vx;
+        p.y += p.vy;
+        p.vida--;
+      });
+      particulas = particulas.filter(p => p.vida > 0);
+      ctx.globalAlpha = 1;
+
+      // Jogador
+      let corP = flashPlayer > 0 ? "#aaffaa" : "#00ff88";
+      ctx.fillStyle = corP;
+      ctx.fillRect(140, 380, 60, 100);
+      ctx.beginPath(); ctx.arc(170, 340, 28, 0, Math.PI*2); ctx.fill();
+
+      if (jogador.espada || jogador.orbe) {
+        ctx.strokeStyle = "#ffd700"; ctx.lineWidth = 8;
+        ctx.beginPath(); ctx.moveTo(200,420); ctx.lineTo(250,380); ctx.stroke();
+      }
+
+      ctx.fillStyle = "white"; ctx.font = "bold 18px Arial";
+      ctx.fillText(jogador.nome.slice(0,12), 130, 320);
+      ctx.fillText(Math.round(jogador.vida/jogador.vidaMax*100)+"%", 150, 500);
 
       // Inimigo
-      const ehBoss = inimigo.nome.includes("BOSS");
-      ctx.fillStyle = ehBoss ? "#ff4444" : "red";
-      ctx.fillRect(460, 140, 70, 70);
+      let ehBoss = inimigo.nome.includes("Dragão") || inimigo.nome.includes("Lich") || inimigo.nome.includes("Titã") || inimigo.nome.includes("Demônio");
+      let corE = flashEnemy > 0 ? "#ffaaaa" : (ehBoss ? "#aa0000" : "#ff5555");
+      ctx.fillStyle = corE;
+      ctx.fillRect(550, 370, 80, 110);
+      ctx.beginPath(); ctx.arc(590, 330, 35, 0, Math.PI*2); ctx.fill();
 
-      ctx.fillStyle = "white";
-      ctx.font = ehBoss ? "18px sans-serif" : "16px sans-serif";
-      ctx.fillText(inimigo.nome, 420, 130);
-      ctx.fillText(`HP: ${Math.round(inimigo.vida)}`, 420, 155);
+      ctx.fillStyle = ehBoss ? "#ffcc00" : "white"; ctx.font = ehBoss ? "bold 22px Arial" : "bold 18px Arial";
+      ctx.fillText(inimigo.nome, 500, 300);
+      ctx.fillText("HP: "+Math.round(inimigo.vida), 540, 340);
+
+      flashPlayer = Math.max(0, flashPlayer-2);
+      flashEnemy  = Math.max(0, flashEnemy-3);
 
       requestAnimationFrame(desenhar);
     }
 
     function atualizarHUD() {
-      document.getElementById("vida").textContent = Math.round((jogador.vida / jogador.vidaMax) * 100) + "%";
+      document.getElementById("vida").textContent = Math.round(jogador.vida / jogador.vidaMax * 100) + "%";
       document.getElementById("mana").textContent = Math.round(jogador.mana);
       document.getElementById("defesa").textContent = jogador.defesa;
       document.getElementById("nivel").textContent = jogador.nivel;
       document.getElementById("xp").textContent = jogador.xp;
       document.getElementById("moedas").textContent = jogador.moedas;
+      document.getElementById("elemento").textContent = jogador.elemento.nome;
       document.getElementById("pocoes").textContent = jogador.pocoes + " poções";
-      document.getElementById("espada").textContent = "Espada: " + (jogador.espada ? "✅" : "❌");
-      document.getElementById("armadura").textContent = "Armadura: " + (jogador.armadura ? "✅" : "❌");
-      document.getElementById("itemUnico").textContent = "Item Único: " + (jogador.itemUnico ? "✅" : "❌");
+      document.getElementById("espada").textContent = "Espada " + (jogador.espada ? "✅" : "❌");
+      document.getElementById("armadura").textContent = "Armadura " + (jogador.armadura ? "✅" : "❌");
+      document.getElementById("anel").textContent = "Anel " + (jogador.anel ? "✅" : "❌");
+      document.getElementById("cajado").textContent = "Cajado " + (jogador.cajado ? "✅" : "❌");
+      document.getElementById("amuleto").textContent = "Amuleto " + (jogador.amuleto ? "✅" : "❌");
+      document.getElementById("botas").textContent = "Botas " + (jogador.botas ? "✅" : "❌");
+      document.getElementById("orbe").textContent = "Orbe " + (jogador.orbe ? "✅" : "❌");
+      document.getElementById("capa").textContent = "Capa " + (jogador.capa ? "✅" : "❌");
+      document.getElementById("coroa").textContent = "Coroa " + (jogador.coroa ? "✅" : "❌");
+    }
+
+    function atualizarBotoesMagia() {
+      const container = document.getElementById("magiasContainer");
+      container.innerHTML = "";
+      const elemento = jogador.elemento;
+      const nivel = jogador.nivel;
+
+      elemento.magias.forEach((magia, i) => {
+        if (nivel >= magia.nivelMin) {
+          const btn = document.createElement("button");
+          btn.innerHTML = `\( {magia.nome} ( \){magia.custo}m)`;
+          btn.className = elemento.cor;
+          btn.onclick = () => acao(`magia${i}`);
+          container.appendChild(btn);
+        }
+      });
     }
 
     function acao(tipo) {
       if (gameOver) return;
-
-      let turnoInimigo = true;
+      let inimigoAtacaDepois = true;
+      let msg = "";
+      let dano = 0;
+      let cura = 0;
 
       if (tipo === "atacar") {
-        const dano = jogador.dano + (jogador.espada ? 10 : 0);
+        dano = jogador.dano + (jogador.espada ? 20 : 0) + (jogador.orbe ? 35 : 0);
+        if (Math.random() < jogador.chanceCritico) { dano *= 2.3; msg = `⚔️ CRÍTICO! `; }
+        msg += `\( {jogador.nome} causou <b> \){dano}</b> de dano!`;
         inimigo.vida -= dano;
-        log(`⚔️ <span class="destaque">\( {jogador.nome}</span> causou <b> \){dano}</b> de dano!`);
-      }
-      else if (tipo === "magia") {
-        if (jogador.mana < 18) {
-          log("🔮 Mana insuficiente! (precisa de 18)");
-          turnoInimigo = false;
-        } else {
-          jogador.mana -= 18;
-          const danoMagia = 22 + personagem.atributos.magia * 3;
-          inimigo.vida -= danoMagia;
-          log(`✨ <span class="destaque">${jogador.nome}</span> lançou <b>Magia Arcana</b>! ${danoMagia} dano!`);
-        }
-      }
-      else if (tipo === "usarPocao" && jogador.pocoes > 0) {
-        const cura = Math.min(45, jogador.vidaMax - jogador.vida);
-        jogador.vida += cura;
-        jogador.pocoes--;
-        log(`🧪 <b>+${cura} vida</b> restaurada!`);
-      }
-      else {
-        log("❌ Ação inválida!");
-        return;
+        flashEnemy = 45;
+        playSound(180, 120, 'sawtooth');
+        criarParticula(590, 330, '#ffcc00', 8);
       }
 
+      else if (tipo.startsWith("magia")) {
+        let idx = parseInt(tipo.replace("magia", ""));
+        let magia = jogador.elemento.magias[idx];
+        if (!magia || jogador.mana < magia.custo) return log("Mana insuficiente ou magia não disponível");
+
+        jogador.mana -= magia.custo;
+        dano = magia.danoBase + personagem.atributos.magia * 4.5 + (jogador.cajado ? 25 : 0);
+
+        // Fraqueza elemental
+        if (jogador.elemento.nome === inimigo.fraqueza) {
+          dano *= 1.5;
+          msg += " <span class='destaque'>FRAQUEZA EXPLORADA! +50%</span>";
+        }
+
+        msg += ` \( {magia.nome}! <b> \){Math.round(dano)}</b> dano`;
+        inimigo.vida -= dano;
+        flashEnemy = 50 + idx * 5;
+
+        // Partículas por elemento
+        let corPart = {Fogo:'#ff4500', Gelo:'#add8e6', Raio:'#ffff99', Terra:'#8b7355'}[jogador.elemento.nome];
+        criarParticula(590, 330, corPart, 20 + idx*5);
+
+        // Som por elemento
+        let freq = {Fogo:400, Gelo:300, Raio:800, Terra:150}[jogador.elemento.nome];
+        playSound(freq, 200 + idx*30, 'triangle');
+
+        if (magia.efeito === "congelar") inimigo.congelado = 2;
+        if (magia.efeito === "imobilizar") inimigo.imobilizado = 2;
+        if (magia.efeito === "veneno") inimigo.veneno = 4;
+      }
+
+      else if (tipo === "usarPocao" && jogador.pocoes > 0) {
+        cura = Math.min(100, jogador.vidaMax - jogador.vida);
+        jogador.vida += cura;
+        jogador.pocoes--;
+        msg = `🧪 Poção! +<b>${cura}</b> vida`;
+        flashPlayer = 35;
+        playSound(600, 180, 'sine');
+      }
+
+      log(msg);
       atualizarHUD();
 
       if (inimigo.vida <= 0) {
         vitoria();
-        turnoInimigo = false;
+        inimigoAtacaDepois = false;
       }
 
-      if (turnoInimigo) {
-        setTimeout(ataqueInimigo, 700);
-      }
+      if (inimigoAtacaDepois) setTimeout(ataqueInimigo, 900);
     }
 
     function ataqueInimigo() {
-      const danoInimigo = Math.max(1, inimigo.ataque - jogador.defesa - (jogador.armadura ? 8 : 0));
-      jogador.vida -= danoInimigo;
-      log(`💥 <span class="destaque">\( {inimigo.nome}</span> causou <b> \){danoInimigo}</b> de dano!`);
+      let def = jogador.defesa + (jogador.armadura ? 18 : 0) + (jogador.amuleto ? 10 : 0);
+      let dano = Math.max(2, inimigo.ataque - def);
+      if (Math.random() < 0.15) dano *= 1.5; // Crítico inimigo
+      jogador.vida -= dano;
+      log(`💥 \( {inimigo.nome} causou <b> \){dano}</b> de dano!`);
+      flashPlayer = 35;
+      playSound(120, 180, 'sawtooth');
       atualizarHUD();
       if (jogador.vida <= 0) morte();
     }
 
     function vitoria() {
-      log(`🎉 <b>${inimigo.nome} derrotado!</b>`);
-      const xpGanho = 20 + Math.floor(Math.random() * 15) + (jogador.nivel * 3);
-      const moedasGanhas = 6 + Math.floor(Math.random() * 8);
-      jogador.xp += xpGanho;
-      jogador.moedas += moedasGanhas;
-      log(`+\( {xpGanho} XP  |  + \){moedasGanhas} moedas`);
+      log(`<span class="epico">🎉 ${inimigo.nome} DESTRUIDO!</span>`);
 
-      const xpNecessario = 30 * jogador.nivel;
-      if (jogador.xp >= xpNecessario) {
+      let xpG = 28 + Math.floor(Math.random()*25) + jogador.nivel*6;
+      if (jogador.coroa) xpG = Math.floor(xpG * 1.3); // +30% XP com coroa
+      let moedaG = 10 + Math.floor(Math.random()*12);
+      jogador.xp += xpG;
+      jogador.moedas += moedaG;
+      log(`+\( {xpG} XP   + \){moedaG} moedas`);
+
+      // Drop épico
+      if (!jogador.orbe && Math.random() < 0.08) {
+        jogador.orbe = true;
+        jogador.dano +=20; jogador.defesa +=20; jogador.vidaMax +=80; jogador.manaMax +=60;
+        log("<span class='epico'>🌌 ORBE DO CAOS DROPADO! +20 todos stats!</span>");
+      }
+
+      let xpNec = 45 * jogador.nivel;
+      if (jogador.xp >= xpNec) {
         jogador.nivel++;
-        jogador.xp -= xpNecessario;
-
-        jogador.vidaMax += 30;
-        jogador.manaMax += 18;
+        jogador.xp -= xpNec;
+        jogador.vidaMax += 45;
+        jogador.manaMax += 25;
         jogador.vida = jogador.vidaMax;
         jogador.mana = jogador.manaMax;
+        log(`<span class="epico">★★★ NÍVEL ${jogador.nivel} ATINGIDO! ★★★</span>`);
+        playSound(900, 400, 'sawtooth');
 
-        log(`<span style="color:lime;font-weight:bold">★★★ Nível ${jogador.nivel} alcançado! ★★★</span>`);
-
-        // Escolha de perk
-        let perkEscolhido = prompt(
-          "Escolha uma melhoria para o nível " + jogador.nivel + ":\n\n" +
-          "1 - +8 de Dano permanente\n" +
-          "2 - +6 de Defesa permanente\n" +
-          "3 - +60 Vida Máxima e cura total\n" +
-          "4 - +25 Mana Máxima e +10 dano mágico"
-        );
-
-        if (perkEscolhido === "1") {
-          jogador.dano += 8;
-          log("Escolhido: +8 DANO");
-        } else if (perkEscolhido === "2") {
-          jogador.defesa += 6;
-          log("Escolhido: +6 DEFESA");
-        } else if (perkEscolhido === "3") {
-          jogador.vidaMax += 60;
-          jogador.vida = jogador.vidaMax;
-          log("Escolhido: +60 VIDA MÁXIMA");
-        } else if (perkEscolhido === "4") {
-          jogador.manaMax += 25;
-          personagem.atributos.magia += 2; // aumenta dano mágico futuro
-          jogador.mana = jogador.manaMax;
-          log("Escolhido: +25 MANA e +10 dano mágico base");
-        } else {
-          log("Nenhum perk escolhido → bônus padrão (+3 dano, +2 defesa)");
-          jogador.dano += 3;
-          jogador.defesa += 2;
-        }
-
-        atualizarHUD();
+        // Perk no level up
+        let perk = prompt("Escolha seu perk de nível:\n1 - +18 Dano permanente\n2 - +22 Defesa permanente\n3 - +60 Vida Máx + cura total\n4 - +35 Mana Máx + +15 dano mágico");
+        if (perk === "1") jogador.dano +=18;
+        else if (perk === "2") jogador.defesa +=22;
+        else if (perk === "3") { jogador.vidaMax +=60; jogador.vida = jogador.vidaMax; }
+        else if (perk === "4") { jogador.manaMax +=35; personagem.atributos.magia +=4; jogador.mana = jogador.manaMax; }
+        else { jogador.dano +=8; jogador.defesa +=10; log("Bônus padrão aplicado"); }
       }
 
       inimigo = gerarInimigo();
+      atualizarHUD();
+      atualizarBotoesMagia();
     }
 
     function morte() {
       gameOver = true;
-      log(`💀 <b>${jogador.nome} foi derrotado!</b> GAME OVER`);
-      log("Pressione F5 para jogar novamente");
+      log(`<span class="epico">💀 ${jogador.nome} CAIU EM BATALHA...</span> GAME OVER`);
       document.querySelectorAll("button").forEach(b => b.disabled = true);
     }
 
-    function abrirLoja() { 
-      document.getElementById("loja").style.display = "block"; 
-      document.getElementById("acoes").style.display = "none"; 
-    }
-    function fecharLoja() { 
-      document.getElementById("loja").style.display = "none"; 
-      document.getElementById("acoes").style.display = "block"; 
+    function salvarJogo() {
+      localStorage.setItem('rpgSave', JSON.stringify(jogador));
+      log("💾 Jogo salvo com sucesso!");
     }
 
-    function comprar(item) {
-      if (item === "pocao" && jogador.moedas >= 5) {
-        jogador.moedas -= 5;
-        jogador.pocoes++;
-        log("🧪 Poção comprada!");
-      } else if (item === "espada" && !jogador.espada && jogador.moedas >= 15) {
-        jogador.moedas -= 15;
-        jogador.espada = true;
-        log("🗡️ Espada comprada! +10 dano");
-      } else if (item === "armadura" && !jogador.armadura && jogador.moedas >= 15) {
-        jogador.moedas -= 15;
-        jogador.armadura = true;
-        jogador.defesa += 10;
-        log("🛡️ Armadura comprada! +10 defesa");
+    function carregarJogo() {
+      const save = localStorage.getItem('rpgSave');
+      if (save) {
+        jogador = JSON.parse(save);
+        atualizarHUD();
+        atualizarBotoesMagia();
+        log("📂 Jogo carregado!");
       } else {
-        log("💸 Moedas insuficientes ou item já possuído!");
+        log("Nenhum save encontrado.");
       }
-      atualizarHUD();
     }
 
-    // Iniciar
-    atualizarHUD();
+    function novoJogo() {
+      if (confirm("Iniciar novo jogo? (perde o save atual)")) {
+        localStorage.removeItem('rpgSave');
+        initJogo(true);
+      }
+    }
+
+    function abrirLoja()  { document.getElementById("loja").style.display = "block"; }
+    function fecharLoja() { document.getElementById("loja").style.display = "none"; }
+
+    function atualizarBotoesMagia() {
+      const container = document.getElementById("magiasContainer");
+      container.innerHTML = "";
+      const elemento = jogador.elemento;
+      const nivel = jogador.nivel;
+
+      elemento.magias.forEach((magia, i) => {
+        if (nivel >= magia.nivelMin) {
+          const btn = document.createElement("button");
+          btn.innerHTML = `\( {magia.nome} ( \){magia.custo}m)`;
+          btn.className = elemento.cor;
+          btn.onclick = () => acao(`magia${i}`);
+          container.appendChild(btn);
+        }
+      });
+    }
+
+    // Início
+    initJogo();
     desenhar();
-    log("🎮 Jogo iniciado! Boa sorte, aventureiro!");
   </script>
 </body>
 </html>
