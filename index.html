@@ -7,8 +7,9 @@
     body { background: #444; color: white; font-family: sans-serif; text-align: center; }
     canvas { background: #222; border: 2px solid #fff; display: block; margin: 10px auto; }
     button { padding: 6px 12px; margin: 5px; font-weight: bold; }
-    #hud, #acoes, #inventario, #loja, #log, #status { margin-top: 10px; }
-    #log div { font-size: 12px; margin: 2px; padding: 2px; background: #333; border-radius: 3px; }
+    #hud, #acoes, #inventario, #loja, #log { margin-top: 10px; }
+    #log div { font-size: 12px; margin: 2px; padding: 4px; background: #333; border-radius: 4px; }
+    .destaque { color: #ffcc00; font-weight: bold; }
   </style>
 </head>
 <body>
@@ -34,7 +35,8 @@
 
   <div id="acoes">
     <button onclick="acao('atacar')">⚔️ Atacar</button>
-    <button onclick="acao('usarPocao')">🧪 Usar Poção</button>
+    <button onclick="acao('magia')">✨ Magia</button>
+    <button onclick="acao('usarPocao')">🧪 Poção</button>
     <button onclick="abrirLoja()">🛒 Loja</button>
   </div>
 
@@ -73,10 +75,8 @@
       }
 
       let atributos = { forca: 5, magia: 5, agilidade: 5, vida: 50 };
-
       if (raca === "Anão") { atributos.forca += 2; atributos.vida += 10; }
       if (raca === "Elfo") { atributos.agilidade += 2; atributos.magia += 1; }
-
       if (classe === "Guerreiro") atributos.forca += 3;
       if (classe === "Mago") atributos.magia += 3;
       if (classe === "Arqueiro") atributos.agilidade += 3;
@@ -94,22 +94,17 @@
 
     const jogador = {
       ...personagem,
-      vidaMax: 0,
-      vida: 0,
-      manaMax: 0,
-      mana: 0,
-      nivel: 1,
-      xp: 0,
-      moedas: 20,
-      dano: 0,
-      defesa: 0,
+      vidaMax: 0, vida: 0,
+      manaMax: 0, mana: 0,
+      nivel: 1, xp: 0, moedas: 20,
+      dano: 0, defesa: 0,
       pocoes: 3,
       espada: false,
       armadura: false,
       itemUnico: false
     };
 
-    // Inicializar stats baseados nos atributos
+    // Inicializar stats
     jogador.vidaMax = personagem.atributos.vida * 2;
     jogador.vida = jogador.vidaMax;
     jogador.manaMax = 20 + personagem.atributos.magia * 4;
@@ -122,8 +117,18 @@
 
     // ⚔️ FUNÇÕES DO JOGO
     function gerarInimigo() {
-      const nomesInimigos = ["Goblin", "Orc", "Esqueleto", "Lobo Selvagem", "Bandido"];
-      const nome = nomesInimigos[Math.floor(Math.random() * nomesInimigos.length)];
+      const nomesNormais = ["Goblin", "Orc", "Esqueleto", "Lobo Selvagem", "Bandido", "Troll", "Aranha Gigante"];
+      const ehBoss = (jogador.nivel % 5 === 0 && jogador.nivel >= 5);
+
+      if (ehBoss) {
+        return {
+          nome: "🔥 BOSS: " + ["Dragão das Sombras", "Senhor dos Mortos", "Rei Demônio", "Colosso de Ferro"][Math.floor(Math.random()*4)],
+          vida: (40 + jogador.nivel * 20) * 2.5,
+          ataque: 10 + jogador.nivel * 4
+        };
+      }
+
+      const nome = nomesNormais[Math.floor(Math.random() * nomesNormais.length)];
       const vida = 40 + jogador.nivel * 12;
       const ataque = 7 + jogador.nivel * 2;
       return { nome, vida, ataque };
@@ -132,45 +137,42 @@
     function log(texto) {
       const div = document.getElementById("log");
       const linha = document.createElement("div");
-      linha.textContent = texto;
+      linha.innerHTML = texto;
       div.prepend(linha);
-      if (div.children.length > 12) {
-        div.removeChild(div.lastChild);
-      }
+      if (div.children.length > 15) div.removeChild(div.lastChild);
       div.scrollTop = 0;
     }
 
     function desenhar() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      // Jogador (círculo verde)
+      // Jogador
       ctx.fillStyle = "#0f0";
       ctx.beginPath();
-      ctx.arc(120, 180, 25, 0, Math.PI * 2);
+      ctx.arc(120, 180, 28, 0, Math.PI * 2);
       ctx.fill();
 
-      // Nome e % vida do jogador
       ctx.fillStyle = "white";
       ctx.font = "14px sans-serif";
-      ctx.fillText(jogador.nome.substring(0, 10), 90, 170);
-      ctx.fillText(Math.round((jogador.vida / jogador.vidaMax) * 100) + "%", 95, 195);
+      ctx.fillText(jogador.nome.substring(0,10), 85, 165);
+      ctx.fillText(Math.round((jogador.vida / jogador.vidaMax)*100) + "%", 95, 205);
 
-      // Inimigo (retângulo vermelho)
-      ctx.fillStyle = "red";
-      ctx.fillRect(480, 150, 50, 50);
+      // Inimigo
+      const ehBoss = inimigo.nome.includes("BOSS");
+      ctx.fillStyle = ehBoss ? "#ff4444" : "red";
+      ctx.fillRect(460, 140, 70, 70);
 
-      // Nome e HP do inimigo
       ctx.fillStyle = "white";
-      ctx.font = "16px sans-serif";
-      ctx.fillText(`${inimigo.nome}`, 440, 140);
-      ctx.fillText(`HP: ${Math.round(inimigo.vida)}`, 440, 165);
+      ctx.font = ehBoss ? "18px sans-serif" : "16px sans-serif";
+      ctx.fillText(inimigo.nome, 420, 130);
+      ctx.fillText(`HP: ${Math.round(inimigo.vida)}`, 420, 155);
 
       requestAnimationFrame(desenhar);
     }
 
     function atualizarHUD() {
       document.getElementById("vida").textContent = Math.round((jogador.vida / jogador.vidaMax) * 100) + "%";
-      document.getElementById("mana").textContent = jogador.mana;
+      document.getElementById("mana").textContent = Math.round(jogador.mana);
       document.getElementById("defesa").textContent = jogador.defesa;
       document.getElementById("nivel").textContent = jogador.nivel;
       document.getElementById("xp").textContent = jogador.xp;
@@ -184,60 +186,105 @@
     function acao(tipo) {
       if (gameOver) return;
 
+      let turnoInimigo = true;
+
       if (tipo === "atacar") {
         const dano = jogador.dano + (jogador.espada ? 10 : 0);
         inimigo.vida -= dano;
-        log(`⚔️ ${jogador.nome} causou ${dano} de dano ao ${inimigo.nome}!`);
-        atualizarHUD();
-        if (inimigo.vida <= 0) {
-          vitoria();
-          return;
+        log(`⚔️ <span class="destaque">\( {jogador.nome}</span> causou <b> \){dano}</b> de dano!`);
+      }
+      else if (tipo === "magia") {
+        if (jogador.mana < 18) {
+          log("🔮 Mana insuficiente! (precisa de 18)");
+          turnoInimigo = false;
+        } else {
+          jogador.mana -= 18;
+          const danoMagia = 22 + personagem.atributos.magia * 3;
+          inimigo.vida -= danoMagia;
+          log(`✨ <span class="destaque">${jogador.nome}</span> lançou <b>Magia Arcana</b>! ${danoMagia} dano!`);
         }
-      } else if (tipo === "usarPocao" && jogador.pocoes > 0) {
-        const cura = Math.min(40, jogador.vidaMax - jogador.vida);
-        jogador.vida = Math.min(jogador.vidaMax, jogador.vida + 40);
+      }
+      else if (tipo === "usarPocao" && jogador.pocoes > 0) {
+        const cura = Math.min(45, jogador.vidaMax - jogador.vida);
+        jogador.vida += cura;
         jogador.pocoes--;
-        log(`🧪 ${jogador.nome} usou uma poção! +${cura} vida`);
-        atualizarHUD();
-      } else {
-        log("❌ Ação inválida ou sem poções!");
+        log(`🧪 <b>+${cura} vida</b> restaurada!`);
+      }
+      else {
+        log("❌ Ação inválida!");
         return;
       }
 
-      // Turno do inimigo
-      setTimeout(() => {
-        ataqueInimigo();
-      }, 800); // Pequeno delay para visual
-    }
-
-    function ataqueInimigo() {
-      const danoInimigo = Math.max(1, inimigo.ataque - jogador.defesa);
-      jogador.vida -= danoInimigo;
-      log(`👹 ${inimigo.nome} atacou ${jogador.nome}, causando ${danoInimigo} de dano!`);
       atualizarHUD();
-      if (jogador.vida <= 0) {
-        morte();
+
+      if (inimigo.vida <= 0) {
+        vitoria();
+        turnoInimigo = false;
+      }
+
+      if (turnoInimigo) {
+        setTimeout(ataqueInimigo, 700);
       }
     }
 
-    function vitoria() {
-      log(`🎉 ${inimigo.nome} derrotado!`);
-      jogador.xp += 20 + Math.floor(Math.random() * 10);
-      jogador.moedas += 5 + Math.floor(Math.random() * 6);
-      log(`+${jogador.xp - (jogador.xp - (20 + Math.floor(Math.random() * 10)))} XP e ${jogador.moedas - (jogador.moedas - (5 + Math.floor(Math.random() * 6)))} moedas!`);
+    function ataqueInimigo() {
+      const danoInimigo = Math.max(1, inimigo.ataque - jogador.defesa - (jogador.armadura ? 8 : 0));
+      jogador.vida -= danoInimigo;
+      log(`💥 <span class="destaque">\( {inimigo.nome}</span> causou <b> \){danoInimigo}</b> de dano!`);
       atualizarHUD();
+      if (jogador.vida <= 0) morte();
+    }
 
-      const xpNec = 30 * jogador.nivel;
-      if (jogador.xp >= xpNec) {
+    function vitoria() {
+      log(`🎉 <b>${inimigo.nome} derrotado!</b>`);
+      const xpGanho = 20 + Math.floor(Math.random() * 15) + (jogador.nivel * 3);
+      const moedasGanhas = 6 + Math.floor(Math.random() * 8);
+      jogador.xp += xpGanho;
+      jogador.moedas += moedasGanhas;
+      log(`+\( {xpGanho} XP  |  + \){moedasGanhas} moedas`);
+
+      const xpNecessario = 30 * jogador.nivel;
+      if (jogador.xp >= xpNecessario) {
         jogador.nivel++;
-        jogador.xp -= xpNec;
-        jogador.vidaMax += 25;
-        jogador.manaMax += 15;
-        jogador.dano += 3;
-        jogador.defesa += 1;
+        jogador.xp -= xpNecessario;
+
+        jogador.vidaMax += 30;
+        jogador.manaMax += 18;
         jogador.vida = jogador.vidaMax;
         jogador.mana = jogador.manaMax;
-        log(`⭐ ${jogador.nome} subiu para o nível ${jogador.nivel}! Stats melhorados!`);
+
+        log(`<span style="color:lime;font-weight:bold">★★★ Nível ${jogador.nivel} alcançado! ★★★</span>`);
+
+        // Escolha de perk
+        let perkEscolhido = prompt(
+          "Escolha uma melhoria para o nível " + jogador.nivel + ":\n\n" +
+          "1 - +8 de Dano permanente\n" +
+          "2 - +6 de Defesa permanente\n" +
+          "3 - +60 Vida Máxima e cura total\n" +
+          "4 - +25 Mana Máxima e +10 dano mágico"
+        );
+
+        if (perkEscolhido === "1") {
+          jogador.dano += 8;
+          log("Escolhido: +8 DANO");
+        } else if (perkEscolhido === "2") {
+          jogador.defesa += 6;
+          log("Escolhido: +6 DEFESA");
+        } else if (perkEscolhido === "3") {
+          jogador.vidaMax += 60;
+          jogador.vida = jogador.vidaMax;
+          log("Escolhido: +60 VIDA MÁXIMA");
+        } else if (perkEscolhido === "4") {
+          jogador.manaMax += 25;
+          personagem.atributos.magia += 2; // aumenta dano mágico futuro
+          jogador.mana = jogador.manaMax;
+          log("Escolhido: +25 MANA e +10 dano mágico base");
+        } else {
+          log("Nenhum perk escolhido → bônus padrão (+3 dano, +2 defesa)");
+          jogador.dano += 3;
+          jogador.defesa += 2;
+        }
+
         atualizarHUD();
       }
 
@@ -246,57 +293,44 @@
 
     function morte() {
       gameOver = true;
-      log(`💀 ${jogador.nome} foi derrotado! GAME OVER!`);
-      log("🔄 Pressione F5 para recarregar e jogar novamente.");
-      document.querySelectorAll("button").forEach(btn => btn.disabled = true);
+      log(`💀 <b>${jogador.nome} foi derrotado!</b> GAME OVER`);
+      log("Pressione F5 para jogar novamente");
+      document.querySelectorAll("button").forEach(b => b.disabled = true);
     }
 
-    function abrirLoja() {
-      document.getElementById("loja").style.display = "block";
-      document.getElementById("acoes").style.display = "none";
+    function abrirLoja() { 
+      document.getElementById("loja").style.display = "block"; 
+      document.getElementById("acoes").style.display = "none"; 
     }
-
-    function fecharLoja() {
-      document.getElementById("loja").style.display = "none";
-      document.getElementById("acoes").style.display = "block";
+    function fecharLoja() { 
+      document.getElementById("loja").style.display = "none"; 
+      document.getElementById("acoes").style.display = "block"; 
     }
 
     function comprar(item) {
-      if (item === "pocao") {
-        if (jogador.moedas >= 5) {
-          jogador.moedas -= 5;
-          jogador.pocoes++;
-          log("🧪 Poção comprada!");
-        } else {
-          log("💸 Moedas insuficientes!");
-        }
-      } else if (item === "espada" && !jogador.espada) {
-        if (jogador.moedas >= 15) {
-          jogador.moedas -= 15;
-          jogador.espada = true;
-          log("🗡️ Espada comprada! +10 dano!");
-        } else {
-          log("💸 Moedas insuficientes!");
-        }
-      } else if (item === "armadura" && !jogador.armadura) {
-        if (jogador.moedas >= 15) {
-          jogador.moedas -= 15;
-          jogador.armadura = true;
-          jogador.defesa += 10;
-          log("🛡️ Armadura comprada! +10 defesa!");
-        } else {
-          log("💸 Moedas insuficientes!");
-        }
+      if (item === "pocao" && jogador.moedas >= 5) {
+        jogador.moedas -= 5;
+        jogador.pocoes++;
+        log("🧪 Poção comprada!");
+      } else if (item === "espada" && !jogador.espada && jogador.moedas >= 15) {
+        jogador.moedas -= 15;
+        jogador.espada = true;
+        log("🗡️ Espada comprada! +10 dano");
+      } else if (item === "armadura" && !jogador.armadura && jogador.moedas >= 15) {
+        jogador.moedas -= 15;
+        jogador.armadura = true;
+        jogador.defesa += 10;
+        log("🛡️ Armadura comprada! +10 defesa");
       } else {
-        log("❌ Item indisponível ou já possui!");
+        log("💸 Moedas insuficientes ou item já possuído!");
       }
       atualizarHUD();
     }
 
-    // Iniciar jogo
+    // Iniciar
     atualizarHUD();
     desenhar();
-    log("🎮 Jogo iniciado! Escolha uma ação.");
+    log("🎮 Jogo iniciado! Boa sorte, aventureiro!");
   </script>
 </body>
 </html>
